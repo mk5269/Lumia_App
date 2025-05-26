@@ -1,5 +1,7 @@
 // app/(tabs)/index.tsx
+import { useRouter } from 'expo-router'; // 상단에 추가
 import React, { useEffect, useState } from 'react';
+
 import {
   Alert,
   Button,
@@ -37,7 +39,7 @@ const MainScreen: React.FC = () => {
   const [currentQuestion, setCurrentQuestion] = useState<{ id: number; text: string } | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userAnswer, setUserAnswer] = useState('');
-
+  const router = useRouter(); // MainScreen 컴포넌트 내부 useState 아래에 추가
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * sampleQuestions.length);
     setCurrentQuestion(sampleQuestions[randomIndex]);
@@ -46,7 +48,9 @@ const MainScreen: React.FC = () => {
   const handleShopPress = () => console.log("Shop pressed");
   const handleHospitalPress = () => console.log("Hospital pressed");
   const handleNotificationPress = () => console.log("Notification pressed");
-  const handleSettingsPress = () => console.log("Settings pressed");
+  const handleSettingsPress = () => {
+  router.push('/settings'); // settings.tsx 화면으로 이동
+};
 
   const handleQuestionPress = () => {
     console.log("질문 눌림! isModalVisible을 true로 변경 시도");
