@@ -1,7 +1,6 @@
 // app/(tabs)/index.tsx
-import { useRouter } from 'expo-router'; // 상단에 추가
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-
 import {
   Alert,
   Button,
@@ -15,9 +14,9 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AnimatedCharacter from '../../components/AnimatedCharacter'; // 경로 확인
+import AnimatedCharacter from '../../components/AnimatedCharacter';
+import { useMusic } from '../../context/MusicContext'; // 읽기용
 
-// 아이콘/이미지 경로 정의
 const icons = {
   shop: require('../../assets/images/shop_icon.png'),
   hospital: require('../../assets/images/hospital_icon.png'),
@@ -28,7 +27,6 @@ const icons = {
   flower: require('../../assets/images/Flower.png'),
 };
 
-// 임시 질문 데이터
 const sampleQuestions = [
   { id: 1, text: "혹시 고민하는 걱정거리가 있어?" },
   { id: 2, text: "오늘 가장 즐거웠던 순간은 언제였나요?" },
@@ -39,7 +37,11 @@ const MainScreen: React.FC = () => {
   const [currentQuestion, setCurrentQuestion] = useState<{ id: number; text: string } | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userAnswer, setUserAnswer] = useState('');
-  const router = useRouter(); // MainScreen 컴포넌트 내부 useState 아래에 추가
+  const router = useRouter();
+
+  // 전역 음악 상태 읽기 (필요 시 표시용)
+  const { isMusicOn, selectedMusic } = useMusic();
+
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * sampleQuestions.length);
     setCurrentQuestion(sampleQuestions[randomIndex]);
@@ -48,14 +50,9 @@ const MainScreen: React.FC = () => {
   const handleShopPress = () => console.log("Shop pressed");
   const handleHospitalPress = () => console.log("Hospital pressed");
   const handleNotificationPress = () => console.log("Notification pressed");
-  const handleSettingsPress = () => {
-  router.push('/settings'); // settings.tsx 화면으로 이동
-};
+  const handleSettingsPress = () => router.push('/settings');
 
-  const handleQuestionPress = () => {
-    console.log("질문 눌림! isModalVisible을 true로 변경 시도");
-    setIsModalVisible(true);
-  };
+  const handleQuestionPress = () => setIsModalVisible(true);
 
   const handleSubmitAnswer = () => {
     if (!userAnswer.trim()) {
@@ -75,25 +72,30 @@ const MainScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* 상단 헤더 영역 */}
+      {/* 상단 헤더 */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={handleShopPress} style={styles.iconButton}><Image source={icons.shop} style={styles.headerIcon} /></TouchableOpacity>
-            <TouchableOpacity onPress={handleHospitalPress} style={styles.iconButton}><Image source={icons.hospital} style={styles.headerIcon} /></TouchableOpacity>
+          <TouchableOpacity onPress={handleShopPress} style={styles.iconButton}>
+            <Image source={icons.shop} style={styles.headerIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleHospitalPress} style={styles.iconButton}>
+            <Image source={icons.hospital} style={styles.headerIcon} />
+          </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity onPress={handleNotificationPress} style={styles.iconButton}><Image source={icons.notification} style={styles.headerIcon} /></TouchableOpacity>
-          <TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton}><Image source={icons.settings} style={styles.headerIcon} /></TouchableOpacity>
+          <TouchableOpacity onPress={handleNotificationPress} style={styles.iconButton}>
+            <Image source={icons.notification} style={styles.headerIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton}>
+            <Image source={icons.settings} style={styles.headerIcon} />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* 메인 컨텐츠 영역 */}
+      {/* 메인 컨텐츠 */}
       <View style={styles.content}>
-        {icons.sun && <Image source={icons.sun} style={styles.sunIcon} resizeMode="contain" /> }
-        <AnimatedCharacter
-          source={icons.egg}
-          style={styles.characterImage}
-        />
+        <Image source={icons.sun} style={styles.sunIcon} resizeMode="contain" />
+        <AnimatedCharacter source={icons.egg} style={styles.characterImage} />
         {currentQuestion && (
           <TouchableOpacity style={styles.questionBubble} onPress={handleQuestionPress}>
             <Text style={styles.questionText}>{currentQuestion.text}</Text>
@@ -101,7 +103,7 @@ const MainScreen: React.FC = () => {
         )}
       </View>
 
-      {/* === 답변 입력 모달을 담을 View === */}
+      {/* 답변 입력 모달 */}
       <View style={StyleSheet.absoluteFillObject} pointerEvents={isModalVisible ? "auto" : "box-none"}>
         <Modal
           animationType="fade"
@@ -115,23 +117,23 @@ const MainScreen: React.FC = () => {
             onPress={handleCancelAnswer}
           >
             <TouchableOpacity
-              style={styles.modalContent} // 여기가 수정된 부분입니다.
+              style={styles.modalContent}
               activeOpacity={1}
-              onPress={() => { /* 모달 내부 컨텐츠 클릭 시 배경의 onPress가 실행되지 않도록 함 */ }}
+              onPress={() => {}}
             >
               {currentQuestion && <Text style={styles.modalQuestionText}>{currentQuestion.text}</Text>}
               <TextInput
                 style={styles.modalTextInput}
                 placeholder="여기에 답변을 입력하세요..."
                 placeholderTextColor="#888"
-                multiline={true}
-                numberOfLines={4} // Android에서 초기 줄 수 제안, 실제 높이는 스타일에 따름
+                multiline
+                numberOfLines={4}
                 value={userAnswer}
                 onChangeText={setUserAnswer}
               />
               <View style={styles.modalButtonContainer}>
                 <Button title="취소" onPress={handleCancelAnswer} color="#FF6347" />
-                <View style={{width: 20}} />
+                <View style={{ width: 20 }} />
                 <Button title="기록하기" onPress={handleSubmitAnswer} />
               </View>
             </TouchableOpacity>
@@ -185,12 +187,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    // 그림자가 필요하면 아래 주석 해제 또는 값 조절
-    // shadowColor: "#000",
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.15,
-    // shadowRadius: 3.84,
-    // elevation: 3,
   },
   questionText: {
     fontSize: 16,
@@ -202,36 +198,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent', // 배경 투명 유지
+    backgroundColor: 'transparent',
   },
-  modalContent: { // <--- 이 부분의 크기 및 그림자 관련 스타일 수정
-    width: 300,       // 너비는 유지하거나 필요시 '85%' 등으로 변경 가능
-    // height: 450,   // 고정 높이 대신 내부 컨텐츠와 padding에 의해 결정되도록 주석 처리 또는 삭제
-    minHeight: 280,  // 최소 높이를 지정하여 너무 작아지지 않도록 함 (값 조절)
-    maxHeight: '80%', // 화면 높이의 80%를 넘지 않도록 (선택 사항)
+  modalContent: {
+    width: 300,
+    minHeight: 280,
+    maxHeight: '80%',
     backgroundColor: 'white',
     borderRadius: 15,
-    paddingVertical: 25,    // 상하 패딩
-    paddingHorizontal: 20,  // 좌우 패딩
+    paddingVertical: 25,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    // 그림자가 필요 없다면 아래 속성들을 모두 제거하거나 주석 처리합니다.
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2, },
-    // shadowOpacity: 0.25,
-    // shadowRadius: 3.84,
-    // elevation: 0, // 안드로이드 그림자 제거 (0 또는 속성 자체를 제거)
   },
   modalQuestionText: {
     fontSize: 17,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 20, // 텍스트 입력창과의 간격
+    marginBottom: 20,
     textAlign: 'center',
   },
   modalTextInput: {
     width: '100%',
-    minHeight: 80,   // 최소 높이
-    maxHeight: 120,  // 최대 높이 (스크롤이 필요하면 ScrollView로 감싸야 함)
+    minHeight: 80,
+    maxHeight: 120,
     padding: 12,
     backgroundColor: '#F8F8F8',
     borderColor: '#E0E0E0',
@@ -241,13 +230,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     color: '#333',
-    marginBottom: 25, // 버튼 컨테이너와의 간격
+    marginBottom: 25,
   },
   modalButtonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly', // 버튼 사이에 공간을 균등하게 배분
+    justifyContent: 'space-evenly',
     width: '100%',
-    // marginTop: 10, // modalTextInput의 marginBottom으로 간격 조절
   },
 });
 
