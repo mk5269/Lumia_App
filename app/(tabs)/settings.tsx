@@ -1,6 +1,7 @@
 // app/(tabs)/settings.tsx
 import DateTimePicker from '@react-native-community/datetimepicker';
-import React, { useState } from 'react';
+import * as Notifications from 'expo-notifications'; // ✅ 추가!
+import React, { useEffect, useState } from 'react';
 import {
     Image,
     Modal,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMusic } from '../../context/MusicContext';
+import { schedulePushNotification } from '../notifications';
 
 const SettingsScreen = () => {
   const [isAlarmOn, setIsAlarmOn] = useState(false);
@@ -20,6 +22,13 @@ const SettingsScreen = () => {
   const [showPicker, setShowPicker] = useState(false);
 
   const { isMusicOn, setIsMusicOn, selectedMusic, setSelectedMusic } = useMusic();
+
+  // ✅ 알림 시간 변경 시 재등록 (선택적)
+  useEffect(() => {
+    if (isAlarmOn) {
+      schedulePushNotification(alarmTime);
+    }
+  }, [alarmTime]);
 
   const onTimeChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
@@ -32,6 +41,18 @@ const SettingsScreen = () => {
     }
   };
 
+  // ✅ 알림 스위치 토글 시 알림 등록/취소
+  const handleAlarmToggle = async (value: boolean) => {
+    setIsAlarmOn(value);
+
+    if (value) {
+      await schedulePushNotification(alarmTime);
+      console.log('🔔 알림 예약됨');
+    } else {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      console.log('🔕 알림 취소됨');
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.titleRow}>
@@ -71,7 +92,7 @@ const SettingsScreen = () => {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.subText}>정기 알림</Text>
-          <Switch value={isAlarmOn} onValueChange={setIsAlarmOn} />
+          <Switch value={isAlarmOn} onValueChange={handleAlarmToggle} />
         </View>
 
         <Text style={styles.subText}>지정한 시간에 쪽지 알림을 보내 드려요.</Text>

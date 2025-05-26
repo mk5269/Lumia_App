@@ -1,14 +1,19 @@
 // app/(tabs)/_layout.tsx
 import { CustomTabBar } from '@/components/navigation/CustomTabBar';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import MusicController from '../../components/MusicController';
-import { MusicProvider } from '../../context/MusicContext'; // 📌 경로 주의!
+import { MusicProvider } from '../../context/MusicContext';
+import { registerForPushNotificationsAsync } from '../notifications';
 
 export default function TabLayout() {
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
   return (
-    <MusicProvider> {/* ✅ 전역 음악 컨텍스트로 감싸기 */}
-    <MusicController /> {/* ✅ 음악 전역 제어 컴포넌트 삽입 */}
+    <MusicProvider>
+      <MusicController />
       <Tabs
         screenOptions={{
           headerShown: false,
