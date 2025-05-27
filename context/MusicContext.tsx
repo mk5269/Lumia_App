@@ -1,13 +1,20 @@
-// context/MusicContext.tsx
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Audio } from 'expo-av';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 type MusicContextType = {
   isMusicOn: boolean;
   setIsMusicOn: (v: boolean) => void;
   selectedMusic: number;
   setSelectedMusic: (v: number) => void;
-  isReady: boolean; // ✅ 추가
+  isReady: boolean;
+  backgroundSoundRef: React.MutableRefObject<Audio.Sound | null>; // ✅ 추가
 };
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -15,7 +22,8 @@ const MusicContext = createContext<MusicContextType | undefined>(undefined);
 export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isMusicOn, setIsMusicOnState] = useState(true);
   const [selectedMusic, setSelectedMusicState] = useState(1);
-  const [isReady, setIsReady] = useState(false); // ✅
+  const [isReady, setIsReady] = useState(false);
+  const backgroundSoundRef = useRef<Audio.Sound | null>(null); // ✅ 추가
 
   useEffect(() => {
     const loadStoredState = async () => {
@@ -25,7 +33,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (storedMusic !== null) setIsMusicOnState(storedMusic === 'true');
       if (storedChoice !== null) setSelectedMusicState(Number(storedChoice));
 
-      setIsReady(true); // ✅ 로딩 완료 표시
+      setIsReady(true);
     };
 
     loadStoredState();
@@ -48,7 +56,8 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsMusicOn,
         selectedMusic,
         setSelectedMusic,
-        isReady, // ✅ 전달
+        isReady,
+        backgroundSoundRef, // ✅ 포함
       }}
     >
       {children}

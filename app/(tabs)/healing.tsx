@@ -1,3 +1,4 @@
+import { useIsFocused } from '@react-navigation/native';
 import { Audio, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef } from 'react';
 
@@ -64,13 +65,20 @@ export default function HealingScreen() {
 
   const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 });
 
-  useEffect(() => {
-    playSound(0); // 첫 항목 재생
+const isFocused = useIsFocused();
 
-    return () => {
-      stopSound();
-    };
-  }, []);
+useEffect(() => {
+  if (isFocused) {
+    playSound(viewIndex.current);
+  } else {
+    stopSound();
+  }
+
+  return () => {
+    stopSound();
+  };
+}, [isFocused]);
+
 
   const renderItem = ({ item }: any) => (
     <View style={styles.page}>

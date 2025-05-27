@@ -1,46 +1,54 @@
 // components/MusicController.tsx
 import { Audio } from 'expo-av';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useMusic } from '../context/MusicContext';
 
 const MusicController = () => {
-  const { isMusicOn, selectedMusic, isReady } = useMusic(); // ✅ 추가
-
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const { isMusicOn, selectedMusic, isReady, backgroundSoundRef } = useMusic();
 
   useEffect(() => {
-    if (!isReady) return; // ✅ 로딩 전이면 아무것도 하지 마!
+    if (!isReady) return;
 
     const manageMusic = async () => {
-      if (soundRef.current) {
-        await soundRef.current.stopAsync();
-        await soundRef.current.unloadAsync();
-        soundRef.current = null;
+      // 기존 사운드 언로드
+      if (backgroundSoundRef.current) {
+        await backgroundSoundRef.current.stopAsync();
+        await backgroundSoundRef.current.unloadAsync();
+        backgroundSoundRef.current = null;
       }
 
       if (!isMusicOn) return;
 
-      const file =
+      const musicFile =
         selectedMusic === 1
           ? require('../assets/sounds/music1.mp3')
           : require('../assets/sounds/music2.mp3');
 
-      const { sound } = await Audio.Sound.createAsync(file);
-      await sound.setIsLoopingAsync(true);
-      await sound.playAsync();
-      soundRef.current = sound;
+      try {
+        const { sound } = await Audio.Sound.createAsync(musicFile, {
+          isLooping: true,
+          volume: 1.0,
+        });
+
+        backgroundSoundRef.current = sound;
+
+        await sound.playAsync();
+      } catch (e) {
+        console.warn('배경음악 로드/재생 실패:', e);
+      }
     };
 
     manageMusic();
 
     return () => {
-      if (soundRef.current) {
-        soundRef.current.stopAsync();
-        soundRef.current.unloadAsync();
-        soundRef.current = null;
+      // 언마운트 시 정리
+      if (backgroundSoundRef.current) {
+        backgroundSoundRef.current.stopAsync();
+        backgroundSoundRef.current.unloadAsync();
+        backgroundSoundRef.current = null;
       }
     };
-  }, [isMusicOn, selectedMusic, isReady]); // ✅ 여기에 isReady 꼭 넣기
+  }, [isMusicOn, selectedMusic, isReady]);
 
   return null;
 };
