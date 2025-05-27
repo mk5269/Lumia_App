@@ -48,7 +48,7 @@ const SignupScreen: React.FC = () => {
     // TODO: 추가적인 유효성 검사 (이메일 형식 등)
 
     // --- 백엔드 API 호출 ---
-    const SIGNUP_API_URL = `${API_BASE_URL}${API_ENDPOINTS.LOGIN}`;
+    const SIGNUP_API_URL = `${API_BASE_URL}${API_ENDPOINTS.SIGNUP}`;
 
     try {
       console.log(`[API 요청] POST ${SIGNUP_API_URL}`);
