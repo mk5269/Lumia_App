@@ -1,6 +1,7 @@
 // app/(tabs)/index.tsx
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+//병합예시
 import {
   Alert,
   Button,
