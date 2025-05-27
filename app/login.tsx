@@ -1,275 +1,171 @@
-// app/login.tsx
-import axios, { isAxiosError } from 'axios';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+// app/signup.tsx
+import axios, { isAxiosError } from 'axios'; //
+import { Link, router } from 'expo-router'; //
+import React, { useEffect, useState } from 'react'; //
 import {
   Alert,
-  Image,
-  ImageBackground,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  View
-} from 'react-native';
-
-import { useAuth } from '@/context/AuthContext'; //
-import AnimatedCharacter from '../components/AnimatedCharacter'; //
+  TouchableOpacity
+} from 'react-native'; //
 // 🔽 API 상수 import 추가
 import { API_BASE_URL, API_ENDPOINTS } from '../constants/api'; // './constants/api'로 경로 수정 (app 폴더 기준)
 
-const LoginScreen: React.FC = () => {
-  const [userId, setUserId] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const { login, isLoading } = useAuth(); //
+const SignupScreen: React.FC = () => {
+  const [userId, setUserId] = useState<string>(''); //
+  const [password, setPassword] = useState<string>(''); //
+  const [passwordConfirm, setPasswordConfirm] = useState<string>(''); //
+  const [username, setUsername] = useState<string>(''); //
+  const [email, setEmail] = useState<string>(''); //
+  const [passwordMismatch, setPasswordMismatch] = useState<boolean>(false); //
 
-  const handleLogin = async () => {
-    if (isLoading) return; //
+  useEffect(() => { //
+    if (passwordConfirm && password !== passwordConfirm) { //
+      setPasswordMismatch(true); //
+    } else { //
+      setPasswordMismatch(false); //
+    }
+  }, [password, passwordConfirm]); //
 
-    if (!userId || !password) {
-      Alert.alert('오류', '아이디와 비밀번호를 모두 입력해주세요.'); //
+  const handleSignup = async () => { //
+    console.log('Signup attempt:', { userId, password, passwordConfirm, username, email }); //
+
+    if (passwordMismatch) { //
+      Alert.alert('오류', '비밀번호가 일치하지 않습니다.'); //
       return;
     }
-    console.log(`[로그인 시도] User ID: ${userId}`); //
+    if (!userId || !password || !username || !email) { //
+      Alert.alert('오류', '모든 필수 항목을 입력해주세요.'); //
+      return;
+    }
     
     // 💡 상수를 사용하여 URL 조합
-    const LOGIN_API_URL = `${API_BASE_URL}${API_ENDPOINTS.LOGIN}`; 
+    const SIGNUP_API_URL = `${API_BASE_URL}${API_ENDPOINTS.SIGNUP}`; 
 
     try {
-      const response = await axios.post(LOGIN_API_URL, { //
+      console.log(`[API 요청] POST ${SIGNUP_API_URL}`); //
+      const response = await axios.post(SIGNUP_API_URL, { //
         userId: userId,
-        password: password
+        password: password,
+        username: username,
+        email: email
       });
 
-      console.log('[API 응답] 성공 (login.tsx):', response.status, response.data); //
-
-      const responseToken = response.data.token; //
-      if (responseToken) {
-        await login(responseToken); //
-      } else {
-        Alert.alert('로그인 실패', '서버로부터 토큰을 받지 못했습니다.'); //
-      }
+      console.log('[API 응답] 성공:', response.status, response.data); //
+      Alert.alert('회원가입 성공', response.data || '회원가입이 완료되었습니다!'); //
+      router.push('/login'); //
 
     } catch (error) {
-      console.error("[API 오류] 로그인 요청 실패 (login.tsx):", error); //
+      console.error("[API 오류] 회원가입 요청 실패:", error); //
       if (isAxiosError(error)) { //
         if (error.response) { //
-          const errorMessage = typeof error.response.data === 'string'  //
-            ? error.response.data  //
-            : (error.response.data?.message || error.response.data?.body || '아이디 또는 비밀번호가 일치하지 않습니다.'); //
-          Alert.alert('로그인 실패', errorMessage); //
+          console.error("  - 서버 응답 상태:", error.response.status); //
+          console.error("  - 서버 응답 데이터:", error.response.data); //
+          Alert.alert('회원가입 실패', error.response.data || `오류 코드: ${error.response.status}`); //
         } else if (error.request) { //
+          console.error("  - 응답 없음:", error.request); //
           Alert.alert('네트워크 오류', '서버로부터 응답을 받을 수 없습니다.'); //
         } else { //
-          Alert.alert('요청 오류', '로그인 요청을 보내는 중 오류가 발생했습니다.'); //
+          console.error('  - 요청 설정 오류:', error.message); //
+          Alert.alert('요청 오류', '회원가입 요청 중 오류가 발생했습니다.'); //
         }
       } else { //
-        Alert.alert('오류', '로그인 처리 중 알 수 없는 오류가 발생했습니다.'); //
+        Alert.alert('오류', '회원가입 처리 중 알 수 없는 오류가 발생했습니다.'); //
       }
     }
   };
 
-  const handleForgotId = () => { Alert.alert('알림', '아이디 찾기 기능은 준비 중입니다.'); }; //
-  const handleForgotPassword = () => { Alert.alert('알림', '비밀번호 찾기 기능은 준비 중입니다.'); }; //
-  const navigateToSignup = () => { //
-    router.push('/signup'); //
-  };
-
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollViewContainer} keyboardShouldPersistTaps="handled">
-        <View style={styles.topDecorContainer}>
-          <TouchableOpacity onPress={navigateToSignup} style={styles.cloudTouchable}>
-            <ImageBackground source={require('../assets/images/cloud_signin.png')} style={styles.cloudImageBackground} resizeMode="contain">
-              <Text style={styles.signInText}>SIGN IN</Text>
-            </ImageBackground>
-          </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>회원가입</Text>
 
-          <View style={styles.characterRow}>
-            <AnimatedCharacter source={require('../assets/images/Character_1.png')} style={styles.characterImage}/>
-            <AnimatedCharacter source={require('../assets/images/Character_2.png')} style={styles.characterImage}/>
-            <AnimatedCharacter source={require('../assets/images/Character_3.png')} style={styles.characterImage}/>
-            <AnimatedCharacter source={require('../assets/images/Character_4.png')} style={styles.characterImage}/>
-          </View>
+        <TextInput style={styles.input} placeholder="사용할 아이디" value={userId} onChangeText={setUserId} autoCapitalize="none"/>
+        <TextInput style={styles.input} placeholder="비밀번호" value={password} onChangeText={setPassword} secureTextEntry />
 
-          <View style={styles.flowerContainer}>
-            <View style={styles.flowerGroup}>
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Image key={`left-flower-${index}`} source={require('../assets/images/Flower.png')} style={styles.flowerImage} />
-              ))}
-            </View>
-            <View style={styles.flowerGroup}>
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Image key={`right-flower-${index}`} source={require('../assets/images/Flower.png')} style={styles.flowerImage} />
-              ))}
-            </View>
-          </View>
-        </View>
+        <TextInput
+          style={[
+            styles.input, //
+            passwordMismatch && styles.inputError //
+          ]}
+          placeholder="비밀번호 확인"
+          value={passwordConfirm}
+          onChangeText={setPasswordConfirm}
+          secureTextEntry
+        />
 
-        <View style={styles.mainContent}>
-          <Text style={styles.appTitle}>Lumia</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="User ID"
-              placeholderTextColor="#A0A0A0"
-              value={userId}
-              onChangeText={setUserId}
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
-            <TouchableOpacity onPress={handleForgotId} style={styles.iconButton} disabled={isLoading}>
-              <Text style={styles.iconText}>?</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#A0A0A0"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-              editable={!isLoading}
-            />
-            <TouchableOpacity onPress={handleForgotPassword} style={styles.iconButton} disabled={isLoading}>
-              <Text style={styles.iconText}>?</Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-            <Text style={styles.loginButtonText}>{isLoading ? '로그인 중...' : 'LOG IN'}</Text>
-          </TouchableOpacity>
-        </View>
+        <TextInput style={styles.input} placeholder="이름 (닉네임)" value={username} onChangeText={setUsername}/>
+        <TextInput style={styles.input} placeholder="이메일 주소" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none"/>
+
+        <TouchableOpacity style={styles.button} onPress={handleSignup}>
+          <Text style={styles.buttonText}>가입하기</Text>
+        </TouchableOpacity>
+
+        <Link href="/login" style={styles.link}>
+          <Text style={styles.linkText}>이미 계정이 있으신가요? 로그인</Text>
+        </Link>
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#D0EFFF', //
+    backgroundColor: '#E0F7FA', //
   },
-  scrollViewContainer: {
+  scrollContainer: {
     flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20, //
-  },
-  topDecorContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 20, //
-    marginBottom: 5, //
-  },
-  cloudTouchable: {
-    alignSelf: 'flex-start', //
-    marginLeft: 10, //
-    marginBottom: 20, //
-  },
-  cloudImageBackground: {
-    width: 130, //
-    height: 85, //
     justifyContent: 'center', //
     alignItems: 'center', //
+    padding: 20, //
   },
-  signInText: {
+  title: {
+    fontSize: 28, //
     fontWeight: 'bold', //
-    fontSize: 14, //
-    color: '#4A4A4A', //
-  },
-  characterRow: {
-    flexDirection: 'row', //
-    justifyContent: 'space-around', //
-    alignItems: 'center', //
-    width: '90%', //
-    marginBottom: 20, //
-  },
-  characterImage: {
-    width: 72, //
-    height: 72, //
-  },
-  flowerContainer: {
-    width: '95%', //
-    flexDirection: 'row', //
-    justifyContent: 'space-between', //
-    alignItems: 'center', //
-  },
-  flowerGroup: {
-    flexDirection: 'row', //
-  },
-  flowerImage: {
-    width: 52, //
-    height: 52, //
-    resizeMode: 'contain', //
-    marginHorizontal: 4, //
-  },
-  mainContent: {
-    width: '85%', //
-    backgroundColor: '#A0D2FF', //
-    borderRadius: 35, //
-    paddingVertical: 35, //
-    paddingHorizontal: 25, //
-    alignItems: 'center', //
-    marginTop: 10, //
-  },
-  appTitle: {
-    fontSize: 45, //
-    fontWeight: 'bold', //
-    color: 'white', //
-    marginBottom: 35, //
-  },
-  inputContainer: {
-    flexDirection: 'row', //
-    alignItems: 'center', //
-    width: '100%', //
-    backgroundColor: '#FFFFE0', //
-    borderRadius: 25, //
-    height: 55, //
-    marginBottom: 18, //
-    paddingHorizontal: 20, //
-    elevation: 2, //
-    shadowColor: '#000', //
-    shadowOpacity: 0.1, //
-    shadowRadius: 3, //
-    shadowOffset: { width: 0, height: 1 }, //
-  },
-  input: {
-    flex: 1, //
-    height: '100%', //
-    fontSize: 16, //
+    marginBottom: 30, //
     color: '#333', //
   },
-  iconButton: {
-    paddingLeft: 10, //
-  },
-  iconText: {
-    fontSize: 18, //
-    fontWeight: 'bold', //
-    color: '#757575', //
-  },
-  loginButton: {
-    width: '100%', //
-    backgroundColor: '#3CB371', //
+  input: {
+    width: '90%', //
+    height: 50, //
+    backgroundColor: 'white', //
+    borderWidth: 1, //
+    borderColor: '#ccc', //
     borderRadius: 25, //
-    height: 55, //
+    paddingHorizontal: 20, //
+    marginBottom: 15, //
+    fontSize: 16, //
+    color: '#000', //
+  },
+  inputError: {
+    color: 'red', //
+  },
+  button: {
+    width: '90%', //
+    height: 50, //
+    backgroundColor: '#FF6F00', //
+    borderRadius: 25, //
     justifyContent: 'center', //
     alignItems: 'center', //
-    marginTop: 15, //
-    elevation: 3, //
-    shadowColor: '#000', //
-    shadowOpacity: 0.2, //
-    shadowRadius: 4, //
-    shadowOffset: { width: 0, height: 2 }, //
+    marginTop: 20, //
   },
-  loginButtonText: {
+  buttonText: {
     color: 'white', //
     fontSize: 18, //
     fontWeight: 'bold', //
   },
+  link: {
+    marginTop: 25, //
+    fontSize: 14, //
+  },
+  linkText: {
+     color: 'blue', //
+     textDecorationLine: 'underline', //
+  }
 });
 
-export default LoginScreen;
+export default SignupScreen;
