@@ -32,7 +32,7 @@ const LoginScreen: React.FC = () => {
       return;
     }
     console.log(`[로그인 시도] User ID: ${userId}`);
-    const API_BASE_URL = 'http://192.168.10.18:8080'; // 실제 IP 주소로 변경하세요
+    const API_BASE_URL = 'http://172.20.10.4:8080'; // 실제 IP 주소로 변경하세요
     const LOGIN_API_URL = `${API_BASE_URL}/api/auth/login`;
 
     try {
