@@ -1,5 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { ImageBackground } from 'react-native';
+import parkBackground from '../../assets/images/park_background.png';
 //main branch
 import {
   Alert,
@@ -69,6 +71,7 @@ const MainScreen: React.FC = () => {
   };
 
   return (
+    <ImageBackground source={parkBackground} style={styles.background}>
     <SafeAreaView style={styles.safeArea}>
       {/* 상단 헤더 */}
       <View style={styles.header}>
@@ -141,13 +144,17 @@ const MainScreen: React.FC = () => {
         </Modal>
       </View>
     </SafeAreaView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+  flex: 1,
+  resizeMode: 'cover',
+},
   safeArea: {
     flex: 1,
-    backgroundColor: '#E0F7FA',
   },
   header: {
     flexDirection: 'row',
@@ -216,12 +223,13 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     marginBottom: 20,
+    marginTop: 240, // 👉 위에서 여백 추가
   },
   questionBubble: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.78)',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 20,
+    borderRadius: 14,
     marginHorizontal: 40,
     alignItems: 'center',
     justifyContent: 'center',

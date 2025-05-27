@@ -55,7 +55,7 @@ const AnimatedCharacter: React.FC<AnimatedCharacterProps> = ({
 
   return (
     // === TouchableOpacity로 감싸서 onPress 연결 ===
-    <TouchableOpacity onPress={handlePress} activeOpacity={0.8}>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.95}>
       <Animated.View style={animatedStyle}>
         <Image source={source} style={style || {}} resizeMode="contain" />
       </Animated.View>
