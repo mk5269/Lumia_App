@@ -47,7 +47,7 @@ const SignupScreen: React.FC = () => {
     // TODO: 추가적인 유효성 검사 (이메일 형식 등)
 
     // --- 백엔드 API 호출 ---
-    const API_BASE_URL = 'http://192.168.10.18:8080'; // <<< 실제 PC IP 확인!
+    const API_BASE_URL = 'http://172.20.10.4:8080'; // <<< 실제 PC IP 확인!
     const SIGNUP_API_URL = `${API_BASE_URL}/api/auth/signup`;
 
     try {
