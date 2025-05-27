@@ -48,7 +48,7 @@ const MainScreen: React.FC = () => {
   }, []);
 
   const handleShopPress = () => console.log('Shop pressed');
-  const handleHospitalPress = () => console.log('Music pressed');
+  const handleHospitalPress = () => router.push('/healing');
   const handleSettingsPress = () => router.push('/settings');
 
   const handleQuestionPress = () => setIsModalVisible(true);
