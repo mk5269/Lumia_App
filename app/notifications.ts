@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 
-// 1. 알림 예약 함수
-export async function schedulePushNotification(date: Date) {
+// 1. 알림 예약 함수 (vibrate 인자 추가)
+export async function schedulePushNotification(date: Date, vibrate: boolean) {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
   const trigger = {
@@ -15,7 +15,8 @@ export async function schedulePushNotification(date: Date) {
     content: {
       title: '🌞 무디의 인사',
       body: '오늘 하루도 수고했어요! 마음은 잘 돌보고 있나요?',
-      sound: 'default', 
+      sound: true,
+      vibrate: vibrate ? [0, 250, 250, 250] : undefined, // ✅ 진동 여부 반영
     },
     trigger,
   });
@@ -41,11 +42,11 @@ export async function registerForPushNotificationsAsync() {
   return true;
 }
 
-// 3. 알림 도착 시 앱이 어떻게 할지 설정
+// 3. 알림 도착 시 앱이 어떻게 반응할지 설정
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: true,   // 알림 소리 재생 설정
+    shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
     shouldShowList: true,
