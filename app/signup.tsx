@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity
 } from 'react-native';
+import { API_BASE_URL, API_ENDPOINTS } from '../constants/api'; //로그인 상수 처리리
 
 const SignupScreen: React.FC = () => {
   // State 변수 선언
@@ -47,8 +48,7 @@ const SignupScreen: React.FC = () => {
     // TODO: 추가적인 유효성 검사 (이메일 형식 등)
 
     // --- 백엔드 API 호출 ---
-    const API_BASE_URL = 'http://220.67.0.114:8080'; // <<< 실제 PC IP 확인!
-    const SIGNUP_API_URL = `${API_BASE_URL}/api/auth/signup`;
+    const SIGNUP_API_URL = `${API_BASE_URL}${API_ENDPOINTS.LOGIN}`;
 
     try {
       console.log(`[API 요청] POST ${SIGNUP_API_URL}`);

@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ImageBackground } from 'react-native';
-import parkBackground from '../../assets/images/park_background.png';
+import TimeBasedBackground from '../../components/TimeBasedBackground';
 //main branch
 import {
   Alert,
@@ -71,7 +70,7 @@ const MainScreen: React.FC = () => {
   };
 
   return (
-    <ImageBackground source={parkBackground} style={styles.background}>
+    <TimeBasedBackground>
     <SafeAreaView style={styles.safeArea}>
       {/* 상단 헤더 */}
       <View style={styles.header}>
@@ -105,7 +104,7 @@ const MainScreen: React.FC = () => {
 
       {/* 메인 캐릭터 영역 */}
       <View style={styles.content}>
-        <Image source={icons.sun} style={styles.sunIcon} resizeMode="contain" />
+      
         <AnimatedCharacter source={icons.egg} style={styles.characterImage} />
         {currentQuestion && (
           <TouchableOpacity style={styles.questionBubble} onPress={handleQuestionPress}>
@@ -144,7 +143,7 @@ const MainScreen: React.FC = () => {
         </Modal>
       </View>
     </SafeAreaView>
-    </ImageBackground>
+    </TimeBasedBackground>
   );
 };
 
@@ -212,15 +211,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingBottom: 50,
   },
-  sunIcon: {
-    width: 40,
-    height: 40,
-    position: 'absolute',
-    top: 20,
-    left: 20,
-  },
+
   characterImage: {
-    width: 150,
+    width: 100,
     height: 150,
     marginBottom: 20,
     marginTop: 240, // 👉 위에서 여백 추가

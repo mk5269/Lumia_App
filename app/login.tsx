@@ -18,6 +18,7 @@ import {
 
 import { useAuth } from '@/context/AuthContext'; // AuthContext의 useAuth Hook import (경로 확인!)
 import AnimatedCharacter from '../components/AnimatedCharacter'; // 경로 확인
+import { API_BASE_URL, API_ENDPOINTS } from '../constants/api';
 
 const LoginScreen: React.FC = () => {
   const [userId, setUserId] = useState<string>('');
@@ -32,8 +33,8 @@ const LoginScreen: React.FC = () => {
       return;
     }
     console.log(`[로그인 시도] User ID: ${userId}`);
-    const API_BASE_URL = 'http://220.67.0.114:8080'; // 실제 IP 주소로 변경하세요
-    const LOGIN_API_URL = `${API_BASE_URL}/api/auth/login`;
+
+    const LOGIN_API_URL = `${API_BASE_URL}${API_ENDPOINTS.LOGIN}`;
 
     try {
       const response = await axios.post(LOGIN_API_URL, {
