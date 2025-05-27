@@ -66,7 +66,7 @@ useEffect(() => {
     <SafeAreaView style={styles.container}>
       <View style={styles.titleRowSticky}>
         <Image source={require('../../assets/images/settings.png')} style={styles.icon} />
-        <Text style={styles.title}>설정</Text>
+        <Text style={styles.title}>설s정</Text>
       </View>
       <ScrollView 
        contentContainerStyle={{ paddingBottom: 60, flexGrow: 1 }}
