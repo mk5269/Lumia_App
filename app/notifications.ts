@@ -15,7 +15,7 @@ export async function schedulePushNotification(date: Date) {
     content: {
       title: '🌞 무디의 인사',
       body: '오늘 하루도 수고했어요! 마음은 잘 돌보고 있나요?',
-      sound: 'default',
+      sound: 'default', ss
     },
     trigger,
   });
