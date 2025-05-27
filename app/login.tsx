@@ -18,8 +18,7 @@ import {
 import { useAuth } from '@/context/AuthContext'; //
 import AnimatedCharacter from '../components/AnimatedCharacter'; //
 // 🔽 API 상수 import 추가
-import { API_BASE_URL, API_ENDPOINTS } from '../constants/api';
- // './constants/api'로 경로 수정 (app 폴더 기준)
+import { API_BASE_URL, API_ENDPOINTS } from '../constants/api'; // './constants/api'로 경로 수정 (app 폴더 기준)
 
 const LoginScreen: React.FC = () => {
   const [userId, setUserId] = useState<string>('');
