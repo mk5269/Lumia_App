@@ -3,14 +3,14 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Notifications from 'expo-notifications'; // ✅ 추가!
 import React, { useEffect, useState } from 'react';
 import {
-    Image,
-    Modal,
-    Platform,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Modal,
+  Platform,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMusic } from '../../context/MusicContext';

@@ -1,7 +1,5 @@
-// app/(tabs)/index.tsx
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-//hyeungjun branch
 import {
   Alert,
   Button,
@@ -12,26 +10,26 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AnimatedCharacter from '../../components/AnimatedCharacter';
-import { useMusic } from '../../context/MusicContext'; // 읽기용
+import { useMusic } from '../../context/MusicContext';
 
 const icons = {
   shop: require('../../assets/images/shop_icon.png'),
-  hospital: require('../../assets/images/hospital_icon.png'),
-  notification: require('../../assets/images/alarm.png'),
+  hospital: require('../../assets/images/music_icon.png'),
   settings: require('../../assets/images/set.png'),
   sun: require('../../assets/images/sun_icon.png'),
   egg: require('../../assets/images/Character_1.png'),
   flower: require('../../assets/images/Flower.png'),
+  seed: require('../../assets/images/seeds.png'),
 };
 
 const sampleQuestions = [
-  { id: 1, text: "혹시 고민하는 걱정거리가 있어?" },
-  { id: 2, text: "오늘 가장 즐거웠던 순간은 언제였나요?" },
-  { id: 3, text: "지금 가장 먹고 싶은 음식은 무엇인가요?" },
+  { id: 1, text: '혹시 고민하는 걱정거리가 있어?' },
+  { id: 2, text: '오늘 가장 즐거웠던 순간은 언제였나요?' },
+  { id: 3, text: '지금 가장 먹고 싶은 음식은 무엇인가요?' },
 ];
 
 const MainScreen: React.FC = () => {
@@ -40,7 +38,6 @@ const MainScreen: React.FC = () => {
   const [userAnswer, setUserAnswer] = useState('');
   const router = useRouter();
 
-  // 전역 음악 상태 읽기 (필요 시 표시용)
   const { isMusicOn, selectedMusic } = useMusic();
 
   useEffect(() => {
@@ -48,20 +45,19 @@ const MainScreen: React.FC = () => {
     setCurrentQuestion(sampleQuestions[randomIndex]);
   }, []);
 
-  const handleShopPress = () => console.log("Shop pressed");
-  const handleHospitalPress = () => console.log("Hospital pressed");
-  const handleNotificationPress = () => console.log("Notification pressed");
+  const handleShopPress = () => console.log('Shop pressed');
+  const handleHospitalPress = () => console.log('Music pressed');
   const handleSettingsPress = () => router.push('/settings');
 
   const handleQuestionPress = () => setIsModalVisible(true);
 
   const handleSubmitAnswer = () => {
     if (!userAnswer.trim()) {
-      Alert.alert("알림", "답변을 입력해주세요.");
+      Alert.alert('알림', '답변을 입력해주세요.');
       return;
     }
     console.log(`Question ID: ${currentQuestion?.id}, Answer: "${userAnswer}"`);
-    Alert.alert("기록 완료!", "네 이야기가 기록되었어.");
+    Alert.alert('기록 완료!', '네 이야기가 기록되었어.');
     setUserAnswer('');
     setIsModalVisible(false);
   };
@@ -76,24 +72,34 @@ const MainScreen: React.FC = () => {
       {/* 상단 헤더 */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
+          <View style={styles.coinContainer}>
+            <View style={styles.coinContent}>
+              <Image source={icons.seed} style={styles.coinImage} />
+              <Text style={styles.coinText}>210</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.headerRight}>
           <TouchableOpacity onPress={handleShopPress} style={styles.iconButton}>
-            <Image source={icons.shop} style={styles.headerIcon} />
+            <View style={styles.iconShadow}>
+              <Image source={icons.shop} style={styles.headerIcon} />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleHospitalPress} style={styles.iconButton}>
-            <Image source={icons.hospital} style={styles.headerIcon} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity onPress={handleNotificationPress} style={styles.iconButton}>
-            <Image source={icons.notification} style={styles.headerIcon} />
+            <View style={styles.iconShadow}>
+              <Image source={icons.hospital} style={styles.headerIcon} />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton}>
-            <Image source={icons.settings} style={styles.headerIcon} />
+            <View style={styles.iconShadow}>
+              <Image source={icons.settings} style={styles.headerIcon} />
+            </View>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* 메인 컨텐츠 */}
+      {/* 메인 캐릭터 영역 */}
       <View style={styles.content}>
         <Image source={icons.sun} style={styles.sunIcon} resizeMode="contain" />
         <AnimatedCharacter source={icons.egg} style={styles.characterImage} />
@@ -104,24 +110,16 @@ const MainScreen: React.FC = () => {
         )}
       </View>
 
-      {/* 답변 입력 모달 */}
-      <View style={StyleSheet.absoluteFillObject} pointerEvents={isModalVisible ? "auto" : "box-none"}>
+      {/* 질문 모달 */}
+      <View style={StyleSheet.absoluteFillObject} pointerEvents={isModalVisible ? 'auto' : 'box-none'}>
         <Modal
           animationType="fade"
           transparent={true}
           visible={isModalVisible}
           onRequestClose={handleCancelAnswer}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={handleCancelAnswer}
-          >
-            <TouchableOpacity
-              style={styles.modalContent}
-              activeOpacity={1}
-              onPress={() => {}}
-            >
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={handleCancelAnswer}>
+            <TouchableOpacity style={styles.modalContent} activeOpacity={1} onPress={() => {}}>
               {currentQuestion && <Text style={styles.modalQuestionText}>{currentQuestion.text}</Text>}
               <TextInput
                 style={styles.modalTextInput}
@@ -158,10 +156,48 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 25 : 10,
     height: 60,
   },
-  headerLeft: { flexDirection: 'row' },
-  headerRight: { flexDirection: 'row' },
-  iconButton: { padding: 10 },
-  headerIcon: { width: 26, height: 26, resizeMode: 'contain' },
+  headerLeft: {
+    flexDirection: 'row',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coinContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+     marginLeft: 15, 
+  },
+  coinContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coinImage: {
+    width: 18,
+    height: 18,
+    marginRight: 6,
+  },
+  coinText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  iconButton: {
+    padding: 2,
+    marginLeft: 10,
+  },
+  headerIcon: {
+    width: 35,
+    height: 35,
+    resizeMode: 'contain',
+  },
+  iconShadow: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 30,
+    padding: 4,
+  },
   content: {
     flex: 1,
     alignItems: 'center',
