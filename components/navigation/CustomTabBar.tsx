@@ -2,7 +2,6 @@
 import React from 'react';
 import { Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native'; // Text 추가 (필요시)
 // Colors, useColorScheme 등 필요 시 import
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 // 사용할 아이콘 경로 정의
@@ -37,7 +36,7 @@ export function CustomTabBar({ state, navigation }: CustomTabBarProps) {
 
     // useColorScheme 훅이나 Colors 상수가 없다면 기본값 설정
     const colorScheme = useColorScheme() || 'light';
-    const activeColor = Colors?.[colorScheme]?.tint || '#2f95dc';
+    const activeColor = '#000000';
     const inactiveColor = 'gray';
 
     return (
@@ -118,7 +117,17 @@ export function CustomTabBar({ state, navigation }: CustomTabBarProps) {
                                 onLongPress={onLongPress}
                                 style={styles.tabBarItem} // 각 탭 아이템 영역
                             >
-                                <Image source={iconSource} style={[iconStyle, { tintColor: iconColor }]} resizeMode="contain" />
+                                <Image
+                                    source={iconSource}
+                                    style={[
+                                        iconStyle,
+                                        isMainTab
+                                        ? {} // ✅ 메인탭은 따로 스타일을 줄 수도 있음 (tintColor 안 주면 원본 색 유지)
+                                        : { tintColor: iconColor } // ✅ 나머지 탭은 tint 적용
+                                    ]}
+                                    resizeMode="contain"
+                                    />
+
                             </TouchableOpacity>
                         );
                     }
@@ -144,8 +153,8 @@ const styles = StyleSheet.create({
         left: 15,
         right: 15,
         height: 65,
-        backgroundColor: 'rgba(255, 255, 255, 0.97)',
-        borderRadius: 25,
+         backgroundColor: 'rgba(255, 255, 255, 0.87)',
+        borderRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
@@ -174,6 +183,7 @@ const styles = StyleSheet.create({
         height: 28,
     },
     mainTabButtonContainer: { // 가운데 버튼 위치/영역 설정
+        backgroundColor: 'rgba(255, 250, 205, 0.8)',
          flex: 1, // 다른 아이템과 동일한 공간 차지하도록 설정
          alignItems: 'center', // 가로 중앙 정렬
          justifyContent: 'center', // 세로 중앙 정렬 시도
@@ -181,8 +191,8 @@ const styles = StyleSheet.create({
     mainTabButton: { // 실제 보이는 동그란 버튼 스타일
         position: 'absolute', // 컨테이너 기준 절대 위치
         alignSelf: 'center', // 명시적 중앙 정렬
-        top: -30, // <<< 탭 바 위로 올리는 정도 (값 조절 필요)
-        backgroundColor: '#FFFACD',
+        top: -40, // <<< 탭 바 위로 올리는 정도 (값 조절 필요)
+        backgroundColor: '#FAFAFA',
         width: 65,
         height: 65,
         borderRadius: 35,
@@ -197,7 +207,7 @@ const styles = StyleSheet.create({
         borderColor: '#eee',
     },
     mainTabIcon: { // 가운데 버튼 안의 아이콘 크기
-        width: 35,
-        height: 35,
+        width: 40,
+        height: 38,
     },
 });
