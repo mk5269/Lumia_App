@@ -1,6 +1,7 @@
 // components/MusicController.tsx
 import { Audio } from 'expo-av';
 import { useEffect } from 'react';
+// eslint-disable-next-line import/namespace
 import { useMusic } from '../context/MusicContext';
 
 const MusicController = () => {
@@ -54,3 +55,4 @@ const MusicController = () => {
 };
 
 export default MusicController;
+

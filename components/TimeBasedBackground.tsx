@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ImageBackground, StyleSheet } from 'react-native';
 import { parkImages } from '../assets/images'; // 경로는 네 구조에 맞게 수정해줘

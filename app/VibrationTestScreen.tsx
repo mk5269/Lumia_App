@@ -1,3 +1,6 @@
+
+// app/VibrationTestScreen.tsx
+
 import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Alert, Button, StyleSheet, View } from 'react-native';

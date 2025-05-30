@@ -1,7 +1,7 @@
+
 import { useIsFocused } from '@react-navigation/native';
 import { Audio, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef } from 'react';
-
 import {
   Dimensions,
   FlatList,

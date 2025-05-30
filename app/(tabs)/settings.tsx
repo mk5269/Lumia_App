@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+// eslint-disable-next-line import/namespace
 import { useMusic } from '../../context/MusicContext';
 import { schedulePushNotification } from '../notifications';
 
