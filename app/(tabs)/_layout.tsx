@@ -1,10 +1,10 @@
 // app/(tabs)/_layout.tsx
-
+//main
 import { CustomTabBar } from '@/components/navigation/CustomTabBar';
 import { Tabs, usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
 import MusicController from '../../components/MusicController';
-// eslint-disable-next-line import/namespace
+ 
 import { MusicProvider, useMusic } from '../../context/MusicContext';
 import { registerForPushNotificationsAsync } from '../notifications'; // 필요시 utils로 맞춰도 무방
 
