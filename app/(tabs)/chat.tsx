@@ -1,16 +1,16 @@
 // app/(tabs)/chat.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 
 import character from '@/assets/images/chat_Image.png';
@@ -18,34 +18,23 @@ import TimeBasedBackground from '@/components/TimeBasedBackground';
 
 const OPENAI_API_KEY = 'Bearer 123';
 
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
-
 const ChatScreen = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [botMessage, setBotMessage] = useState('안녕하세요! 무엇을 도와드릴까요?');
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
-
-  useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  const inputRef = useRef(null);
 
   const handleSend = async () => {
     if (!userInput.trim()) return;
-
-    const userMessage: Message = { role: 'user', content: userInput };
-    const currentMessages = [...messages, userMessage];
-    setMessages(currentMessages);
+    const userMessage = userInput;
     setUserInput('');
     setLoading(true);
+    Keyboard.dismiss();
 
     try {
       const messagesForAPI = [
         { role: 'system', content: '너는 친절한 도우미야.' },
-        ...currentMessages,
+        { role: 'user', content: userMessage },
       ];
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -66,20 +55,18 @@ const ChatScreen = () => {
       }
 
       const data = await response.json();
-      const botMessage: Message = {
-        role: 'assistant',
-        content: data.choices?.[0]?.message?.content?.trim() || '음... 지금은 답변하기 조금 어려워요.',
-      };
-      setMessages(prev => [...prev, botMessage]);
+      const assistantMessage =
+        data.choices?.[0]?.message?.content?.trim() || '음... 지금은 답변하기 조금 어려워요.';
+      setBotMessage(assistantMessage);
     } catch (err) {
-      const errorMsg: Message = {
-        role: 'assistant',
-        content: '죄송해요, 오류가 발생했어요. 다시 시도해 주세요!',
-      };
-      setMessages(prev => [...prev, errorMsg]);
+      setBotMessage('죄송해요, 오류가 발생했어요. 다시 시도해 주세요!');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePlusPress = () => {
+    Keyboard.dismiss();
   };
 
   return (
@@ -89,70 +76,48 @@ const ChatScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.transparentHeaderSpacer} />
-        <View style={styles.container}>
-          <ScrollView
-            ref={scrollViewRef}
-            contentContainerStyle={styles.chatOutput}
-            showsVerticalScrollIndicator={false}
-          >
-            {messages.map((msg, idx) => {
-              const isBot = msg.role === 'assistant';
-              return (
-                <View
-                  key={idx}
-                  style={isBot ? styles.botMessageRow : styles.userMessageRow}
-                >
-                  {isBot && <Image source={character} style={styles.botImage} />}
-                  <View
-                    style={[
-                      styles.message,
-                      isBot ? styles.botMessage : styles.userMessage,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.messageText,
-                        isBot ? styles.botMessageText : styles.userMessageText,
-                      ]}
-                    >
-                      {msg.content}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
 
-            {loading && (
-              <View style={styles.botMessageRow}>
-                <Image source={character} style={styles.botImage} />
-                <View style={[styles.message, styles.botMessage]}>
-                  <ActivityIndicator size="small" color="#555" />
-                </View>
-              </View>
-            )}
-          </ScrollView>
+        <View style={{ flex: 1 }}>
+          {/* 캐릭터는 고정된 위치 */}
+          <View style={styles.fixedCharacterWrapper} pointerEvents="none">
+            <Image source={character} style={styles.botImageLarge} />
+          </View>
 
-          <View style={styles.inputArea}>
-            <TouchableOpacity style={styles.plusButton}>
-              <Text style={styles.plusText}>＋</Text>
-            </TouchableOpacity>
+          {/* 말풍선은 캐릭터 위쪽으로 이동 */}
+          <View style={styles.messageContainerAdjusted}>
+            <View style={styles.botBubble}>
+              {loading ? (
+                <ActivityIndicator size="small" color="#555" />
+              ) : (
+                <Text style={styles.botText}>{botMessage}</Text>
+              )}
+            </View>
+          </View>
 
-            <TextInput
-              style={styles.textInput}
-              value={userInput}
-              onChangeText={setUserInput}
-              placeholder="답장하기"
-              multiline
-              placeholderTextColor="#ccc"
-            />
+          <View style={styles.container}>
+            <View style={styles.inputArea}>
+              <TouchableOpacity style={styles.plusButton} onPress={handlePlusPress}>
+                <Text style={styles.plusText}>-</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={handleSend}
-              disabled={loading}
-            >
-              <Text style={styles.sendButtonText}>➤</Text>
-            </TouchableOpacity>
+              <TextInput
+                ref={inputRef}
+                style={styles.textInput}
+                value={userInput}
+                onChangeText={setUserInput}
+                placeholder="답장하기"
+                multiline
+                placeholderTextColor="#ccc"
+              />
+
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={handleSend}
+                disabled={loading}
+              >
+                <Text style={styles.sendButtonText}>➤</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -165,57 +130,40 @@ const styles = StyleSheet.create({
     height: Platform.OS === 'ios' ? 80 : 35,
     backgroundColor: 'transparent',
   },
+  fixedCharacterWrapper: {
+    position: 'absolute',
+    top: 173,
+    left: 200,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  messageContainerAdjusted: {
+    marginTop: 90,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    right: 10,
+  },
+  botImageLarge: {
+    width: 84,
+    height: 114,
+  },
+  botBubble: {
+    backgroundColor: 'rgba(230, 230, 250, 0.8)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 18,
+    maxWidth: '80%',
+    marginBottom: 8,
+  },
+  botText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 22,
+  },
   container: {
     flex: 1,
-    paddingBottom: 20,
-  },
-  chatOutput: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexGrow: 1,
-  },
-  message: {
-    maxWidth: '80%',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 18,
-    marginVertical: 6,
-  },
-  userMessageRow: {
-    flexDirection: 'row',
     justifyContent: 'flex-end',
-  },
-  botMessageRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  botImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  userMessage: {
-    backgroundColor: '#A882F7',
-    borderTopRightRadius: 0,
-  },
-  botMessage: {
-    backgroundColor: '#E6E6FA',
-    borderTopLeftRadius: 0,
-  },
-  userMessageText: {
-    color: 'white',
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  botMessageText: {
-    color: '#333',
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  messageText: {
-    fontSize: 16,
   },
   inputArea: {
     flexDirection: 'row',
@@ -245,6 +193,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
     paddingVertical: 8,
+     zIndex: 11, // 👈 높게 설정 (덮기 위함)
   },
   sendButton: {
     width: 36,
