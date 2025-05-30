@@ -17,7 +17,7 @@ import {
 import character from '@/assets/images/chat_Image.png';
 
 // API 키는 실제 앱에서는 백엔드 서버를 통해 API를 호출하거나, 보안 처리된 환경 변수를 사용해야 합니다.
-const OPENAI_API_KEY = 'Bearer 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';
+const OPENAI_API_KEY = 'Bearer 123';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
