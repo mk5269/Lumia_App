@@ -24,7 +24,7 @@ import AnimatedCharacter from '../../components/AnimatedCharacter';
 import TimeBasedBackground from '../../components/TimeBasedBackground';
  
 import { API_BASE_URL, API_ENDPOINTS } from '../../constants/api';
-// eslint-disable-next-line import/namespace
+ 
 import { useMusic } from '../../context/MusicContext';
 
 // 이미지 아이콘 경로
@@ -32,7 +32,6 @@ const icons = {
   shop: require('../../assets/images/shop_icon.png'),
   hospital: require('../../assets/images/music_icon.png'),
   settings: require('../../assets/images/set.png'),
-  sun: require('../../assets/images/sun_icon.png'),
   egg: require('../../assets/images/Character_1.png'),
   flower: require('../../assets/images/Flower.png'),
   seed: require('../../assets/images/seeds.png'),
@@ -248,7 +247,7 @@ const MainScreen: React.FC = () => {
           </View>
         </View>
         <View style={styles.content}>
-          <Image source={icons.sun} style={styles.sunIcon} resizeMode="contain" />
+         
           <View style={styles.mainInteractionArea}>
             {renderCharacterContent()}
             {renderMessageArea()}
@@ -314,7 +313,6 @@ const styles = StyleSheet.create({
   headerIcon: { width: 35, height: 35, resizeMode: 'contain' },
   iconShadow: { backgroundColor: 'rgba(255, 255, 255, 0.3)', borderRadius: 30, padding: 4 },
   content: { flex: 1, paddingBottom: 50 },
-  sunIcon: { width: 40, height: 40, position: 'absolute', top: 20, left: 20, opacity: 0.8 },
   mainInteractionArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   characterContainer: { position: 'relative', alignItems: 'center', marginBottom: 20, marginTop: 240 },
   characterImage: { width: 150, height: 150, resizeMode: 'contain' },
