@@ -3,12 +3,12 @@ import { Audio, ResizeMode, Video } from 'expo-av';
 import React, { useEffect, useRef } from 'react';
 
 import {
-    Dimensions,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    View,
+  Dimensions,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
