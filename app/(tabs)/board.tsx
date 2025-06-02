@@ -1,104 +1,202 @@
+//app/(tabs)/board.tsx
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
+import { useRouter, type Href } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
+// API_ENDPOINTS를 추가로 import 합니다.
+import { API_BASE_URL, API_ENDPOINTS } from '../../constants/api';
 
 interface ChecklistItem {
-  id: string;
-  text: string;
+  id: number;
+  title: string;
+  category: string;
+  userId: string;
+  // 필요하다면 createdAt 등 PostResponseDto에 있는 다른 필드들도 추가할 수 있습니다.
 }
 
-const data: ChecklistItem[] = [
-  { id: '1', text: "요즘, ‘나는 괜찮은 사람이다’라는.." },
-  { id: '2', text: "식욕이 예전보다 줄었거나, 반대로.." },
-  { id: '3', text: "거울을 볼 때, 내 모습이 별로라.." },
-  { id: '4', text: "하루 종일 누워있거나 아무것 .." },
-  { id: '5', text: "이유 없이 짜증이 나거나, 사소.." },
-  { id: '6', text: "오늘은 어떤 일이 인상깊었는지 .." },
-  { id: '7', text: "혹시 고민하는 걱정거리가 있어 .." },
-  { id: '8', text: "이제는 말할 수 있다! 난사실 .." },
-];
+const PAGE_SIZE = 2;
 
-export default function ChecklistScreen() {
-  const navigation = useNavigation();
+const ChecklistScreen = () => {
+  const [data, setData] = useState<ChecklistItem[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+  const router = useRouter();
+
+  const fetchData = async (pageNum: number) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE_URL}${API_ENDPOINTS.GET_POSTS_LIST}`, {
+        params: { page: pageNum, size: PAGE_SIZE, sort: 'id,DESC' },
+      });
+      setData(res.data.content);
+      setTotalPages(res.data.totalPages);
+      if (pageNum === 0 && data.length > 0) {
+         flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }
+    } catch (error) {
+      console.error('게시글 목록 데이터 로딩 실패 (board.tsx):', error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData(page);
+  }, [page]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData(page);
+    }, [page])
+  );
+
+  const getPagination = () => {
+    const current = page + 1;
+    const maxVisible = 3;
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= 1) return [];
+
+    let start = Math.max(1, current - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end === totalPages && (end - start + 1) < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    if (start > 1) {
+      pages.push(1);
+      if (start > 2) pages.push('...');
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (end < totalPages) {
+      if (end < totalPages - 1) pages.push('...');
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
-        <View style={{ flex: 1, justifyContent: 'flex-start' }}>
-
-          {/* 헤더 */}
-          <View style={styles.header}>
-            <View style={styles.uploadButton} /> {/* 왼쪽 빈공간 */}
-            <View style={styles.titleContainer}>
-              <Text style={styles.title}>응원하기</Text>
-            </View>
-            <View style={styles.uploadButton}>
-              <Ionicons
-                name="create-outline"
-                size={24}
-                color="#D97B7B"
-                //onPress={() => navigation.navigate('boardForm')} // 실제 라우팅 이름으로 변경
-              />
-            </View>
-          </View>
-
-          {/* 카드 리스트 */}
-          <FlatList
-            data={data}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ paddingBottom: 160, alignItems: 'stretch' }}
-            renderItem={({ item }) => (
-              <View style={styles.itemRow}>
-                <View style={styles.cardImage}>
-                  <Ionicons name="image" size={40} color="gray" />
-                </View>
-                <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle}>{item.text.slice(0, 10)}...</Text>
-                  <Text style={styles.cardDescription}>{item.text}</Text>
-                  <Text style={styles.cardDate}>2025-05-20</Text>
-                </View>
-              </View>
-            )}
-            ListFooterComponent={
-              <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 40 }}>
-                <View style={styles.pagination}>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <Text
-                      key={n}
-                      style={[styles.pageNumber, n === 1 && styles.activePage]}
-                    >
-                      {n}
-                    </Text>
-                  ))}
-                </View>
-              </View>
-            }
-          />
+      <View style={styles.header}>
+        <Ionicons name="menu" size={28} color="black" />
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>List</Text>
+          <Text style={styles.subtitle}>Message</Text>
         </View>
-      </KeyboardAvoidingView>
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => router.push('/boardForm' as Href)}
+        >
+          <Ionicons name="arrow-up-circle" size={24} color="#D97B7B" />
+        </TouchableOpacity>
+      </View>
+
+      {loading && data.length === 0 ? (
+        <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={data}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 80 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => router.push(`/boardDetail/${item.id}` as Href)}>
+              <View style={styles.card}>
+                <View style={styles.cardContent}>
+                  <View style={styles.cardLeft}>
+                    <Ionicons name="checkbox-outline" size={22} color="black" />
+                    <Text style={styles.cardCategory}>[{item.category}]</Text>
+                    <Text style={styles.cardTitle} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
+                  </View>
+                  <Text style={styles.cardUser}>{item.userId}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+          ListFooterComponent={
+            totalPages > 0 ? (
+                <View style={styles.pagination}>
+                <TouchableOpacity
+                    onPress={() => setPage(Math.max(0, page - 1))}
+                    disabled={page === 0}
+                    style={page === 0 ? styles.invisibleButton : styles.pageArrow}
+                >
+                    <Ionicons name="chevron-back" size={24} color={page === 0 ? "transparent" : "black"} />
+                </TouchableOpacity>
+
+                {getPagination().map((item, idx) =>
+                    item === '...' ? (
+                    <Text key={`dots-${idx}`} style={styles.pageDots}>...</Text>
+                    ) : (
+                    <TouchableOpacity key={`page-${item}`} onPress={() => setPage(Number(item) - 1)}>
+                        <Text
+                            style={[
+                                styles.pageNumber,
+                                Number(item) === page + 1 && styles.activePage,
+                            ]}
+                        >
+                        {item}
+                        </Text>
+                    </TouchableOpacity>
+                    )
+                )}
+
+                <TouchableOpacity
+                    onPress={() => setPage(Math.min(totalPages - 1, page + 1))}
+                    disabled={page >= totalPages - 1}
+                    style={page >= totalPages - 1 ? styles.invisibleButton : styles.pageArrow}
+                >
+                    <Ionicons name="chevron-forward" size={24} color={page >= totalPages - 1 ? "transparent" : "black"} />
+                </TouchableOpacity>
+                </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            !loading && data.length === 0 ? (
+                <View style={styles.emptyListContainer}>
+                    <Text style={styles.emptyListText}>표시할 게시글이 없어요.</Text>
+                    <Text style={styles.emptyListSubText}>첫 번째 게시글을 작성해보세요!</Text>
+                </View>
+            ) : null
+          }
+        />
+      )}
     </SafeAreaView>
   );
-}
+};
+
+export default ChecklistScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eeffdd',
-    paddingTop: 80,
+    backgroundColor: 'white',
     paddingHorizontal: 20,
+    // Platform.OS를 사용하는 부분
+    paddingTop: Platform.OS === 'android' ? 25 : 40,
   },
+  // 이하 스타일은 이전과 동일하게 유지됩니다.
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -106,77 +204,115 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   titleContainer: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 28,
-    fontWeight: '900',
+    fontFamily: 'serif',
+    fontWeight: '600',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: 'gray',
+    fontStyle: 'italic',
   },
   uploadButton: {
-    width: 34,
-    height: 34,
     backgroundColor: '#FCE0E0',
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 5,
   },
-  cardImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    backgroundColor: '#eee',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  card: {
+    backgroundColor: '#fefefe',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    marginHorizontal: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+    elevation: 3,
   },
   cardContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: '#444',
-  },
-  cardDate: {
-    fontSize: 12,
-    color: 'gray',
-    marginTop: 4,
-  },
-  itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    height: 100,
+    justifyContent: 'space-between',
+  },
+  cardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    gap: 8,
+  },
+  cardCategory: {
+    fontWeight: 'bold',
+    color: '#D97B7B',
+    fontSize: 14,
+  },
+  cardTitle: {
+    fontSize: 14,
+    flexShrink: 1,
+  },
+  cardUser: {
+    fontSize: 12,
+    color: 'gray',
+    textAlign: 'right',
+    marginLeft: 8,
   },
   pagination: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  pageArrow: {
+    paddingHorizontal: 8,
   },
   pageNumber: {
-    marginHorizontal: 6,
     fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 4,
+  },
+  pageDots: {
+    fontSize: 16,
+    color: '#999',
+    paddingHorizontal: 6,
+    alignSelf: 'center',
   },
   activePage: {
-    color: 'red',
     fontWeight: 'bold',
+    color: 'white',
+    backgroundColor: '#D97B7B',
   },
+  invisibleButton: {
+    paddingHorizontal: 8,
+    opacity: 0,
+    pointerEvents: 'none',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+    paddingHorizontal: 20,
+  },
+  emptyListText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 8,
+  },
+  emptyListSubText: {
+    fontSize: 14,
+    color: 'gray',
+    textAlign: 'center',
+  }
 });
