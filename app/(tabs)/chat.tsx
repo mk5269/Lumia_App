@@ -143,6 +143,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     right: 10,
+    zIndex: 11,
   },
   botImageLarge: {
     width: 84,
