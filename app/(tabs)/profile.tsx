@@ -308,7 +308,7 @@ export default function ProfileScreen() {
   if (isLoading && !userData) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}><Text style={styles.headerTitle}>내 계정</Text></View>
+        <View style={styles.header}><Text style={styles.headerTitle}>계정</Text></View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.loadingText}>프로필 정보 로딩 중...</Text>
@@ -320,7 +320,7 @@ export default function ProfileScreen() {
   if (!userData && !authLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}><Text style={styles.headerTitle}>내 계정</Text></View>
+        <View style={styles.header}><Text style={styles.headerTitle}>계정</Text></View>
         <View style={styles.loadingContainer}>
           <Text style={styles.errorText}>프로필 정보를 불러올 수 없습니다.</Text>
           <TouchableOpacity
@@ -342,7 +342,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>내 계정</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -556,7 +556,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F0F0F7' },
   header: {
-    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight + 12 : 12,
+    paddingTop: Platform.OS === 'android' ? Constants.statusBarHeight + 12 : 15,
     paddingBottom: 12,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 25,
     fontWeight: '600',
   },
   scrollView: { flex: 1 },

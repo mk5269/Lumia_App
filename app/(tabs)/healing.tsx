@@ -24,8 +24,8 @@ const data = [
   {
     key: 'rain',
     label: '빗멍',
-    type: 'image',
-    image: require('../../assets/images/rain.gif'),
+    type: 'video',
+    video: require('../../assets/videos/rain.mp4'),
     sound: require('../../assets/sounds/rain_sound.mp3'),
   },
 ];
