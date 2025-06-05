@@ -1,3 +1,4 @@
+import { useIsFocused } from '@react-navigation/native'; // 이 부분 꼭 추가!
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -28,6 +29,7 @@ const BoardScreen = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const router = useRouter();
+  const isFocused = useIsFocused();  // 화면 포커스 상태 체크
 
   const fetchData = async (pageNum: number) => {
     try {
@@ -35,20 +37,20 @@ const BoardScreen = () => {
         params: { page: pageNum, size: PAGE_SIZE, sort: 'id,DESC' },
       });
       setData(res.data.content);
-      setTotalPages(res.data.totalPages); // API에서 전체 페이지 수 동적으로 받아오기
+      setTotalPages(res.data.totalPages);
     } catch (error) {
       console.error('게시글 목록 로딩 실패:', error);
     }
   };
 
   useEffect(() => {
-    fetchData(page);
-  }, [page]);
+    if (isFocused) {
+      fetchData(page);
+    }
+  }, [page, isFocused]);
 
-  // 페이지네이션에서 보여줄 최대 버튼 개수
   const MAX_PAGE_BUTTONS = 5;
 
-  // 현재 페이지 기준으로 보여줄 페이지 버튼 배열 생성
   const getPageButtons = () => {
     let start = Math.max(0, page - Math.floor(MAX_PAGE_BUTTONS / 2));
     let end = start + MAX_PAGE_BUTTONS;
@@ -72,9 +74,7 @@ const BoardScreen = () => {
         resizeMode="cover"
         style={styles.background}
       >
-        {/* 어두운 반투명 오버레이 */}
         <View style={styles.overlay} />
-        {/* 배경에 표시될 사과 이미지들 (터치 기능 없음) */}
         <View style={styles.backgroundApplesContainer}>
           {data.map((item, index) => (
             <View
@@ -95,7 +95,6 @@ const BoardScreen = () => {
           ))}
         </View>
 
-        {/* 게시글 목록 (ScrollView) */}
         <ScrollView contentContainerStyle={styles.listContainer}>
           {data.length > 0 ? (
             data.map((item) => (
@@ -114,7 +113,6 @@ const BoardScreen = () => {
           )}
         </ScrollView>
 
-        {/* 페이지 화살표 + 숫자 버튼 */}
         <View style={styles.pagination}>
           <TouchableOpacity
             onPress={() => page > 0 && setPage(page - 1)}
@@ -146,7 +144,6 @@ const BoardScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* 글쓰기 + 버튼 */}
         <TouchableOpacity
           style={styles.floatingButton}
           onPress={() => router.push('/boardForm')}
