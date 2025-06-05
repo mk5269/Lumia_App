@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  ImageBackground,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -33,7 +34,6 @@ export default function BoardFormScreen() {
     if (!title.trim() || !content.trim()) {
       return;
     }
-
     try {
       setIsSubmitting(true);
       const apiUrl = `${API_BASE_URL}${API_ENDPOINTS.CREATE_POST}`;
@@ -54,175 +54,175 @@ export default function BoardFormScreen() {
   };
 
 return (
-  <SafeAreaView style={styles.container}>
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={60}
-      >
-        {/* 상단 고정 영역 */}
-        <View style={styles.fixedHeader}>
-          <Text style={styles.title}>Share My Light</Text>
-          {/* 👇 귀여운 분리 라인 추가 */}
-          <Text style={styles.separator}>
-            ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆
-          </Text>
-          <View style={styles.categoryContainer}>
-            {['칭찬', '격려', '기타'].map((item) => (
-              <TouchableOpacity
-                key={item}
-                style={[
-                  styles.categoryButton,
-                  category === item && styles.categoryButtonActive,
-                ]}
-                onPress={() => setCategory(item)}
-              >
-                
-                <Text
-                  style={[
-                    styles.categoryText,
-                    category === item && styles.categoryTextActive,
-                  ]}
-                >
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+  <ImageBackground
+    source={require('../../assets/images/chat_tree.png')}
+    resizeMode="cover"
+    style={styles.backgroundImage}
+  >
+    {/* SafeAreaView 바깥에 위치 */}
+    <View style={styles.fixedHeader}>
+      <Text style={styles.headerTitle}>Share My Light</Text>
+      <Text style={styles.separator}>⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆</Text>
+      <View style={styles.categoryContainer}>
+        {['칭찬', '격려', '기타'].map((item) => (
+          <TouchableOpacity
+            key={item}
+            style={[
+              styles.categoryButton,
+              category === item && styles.categoryButtonActive,
+            ]}
+            onPress={() => setCategory(item)}
+          >
+            <Text
+              style={[
+                styles.categoryText,
+                category === item && styles.categoryTextActive,
+              ]}
+            >
+              {item}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
 
-
-        </View>
-
-        {/* 제목+내용만 스크롤 */}
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
+    {/* SafeArea 적용은 나머지 콘텐츠만 감싸기 */}
+    <SafeAreaView style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
-          <TextInput
-            style={styles.inputTitle}
-            placeholder="제목을 입력하세요"
-            value={title}
-            onChangeText={setTitle}
-            placeholderTextColor="#aaa"
-          />
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TextInput
+              style={styles.inputTitle}
+              placeholder="제목을 입력하세요"
+              value={title}
+              onChangeText={setTitle}
+              placeholderTextColor="#A8A8A8"
+            />
+            <TextInput
+              style={styles.inputContent}
+              placeholder="당신의 이야기를 들려주세요"
+              value={content}
+              onChangeText={setContent}
+              multiline
+              textAlignVertical="top"
+              placeholderTextColor="#A8A8A8"
+            />
+          </ScrollView>
 
-          <TextInput
-            style={styles.inputContent}
-            placeholder="당신의 이야기를 들려주세요"
-            value={content}
-            onChangeText={setContent}
-            multiline
-            textAlignVertical="top"
-            placeholderTextColor="#aaa"
-          />
-        </ScrollView>
-
-        {/* 등록 버튼 */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
-          <Ionicons name="arrow-up" size={24} color="white" />
-        </TouchableOpacity>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
-  </SafeAreaView>
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            <Ionicons name="paper-plane-outline" size={24} color="white" />
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
+  </ImageBackground>
 );
 
 }
 
 const styles = StyleSheet.create({
-  container: {
+  backgroundImage: {
     flex: 1,
-    backgroundColor: '#FFF7F0', // 따뜻한 배경
   },
-  scroll: {
-    flexGrow: 1,
-    padding: 20,
+  fixedHeader: {
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 100 : 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    marginBottom: 10,
   },
-  title: {
+  headerTitle: {
     fontSize: 27,
     fontWeight: 'bold',
-    color: '#FF8A65',
+    color: '#A0522D',
     textAlign: 'center',
-    marginBottom: 20,
-    fontFamily: 'Roboto',
+    marginBottom: 15,
+  },
+  separator: {
+    textAlign: 'center',
+    color: '#8FBC8F',
+    fontSize: 18,
+    marginBottom: 15,
+    fontWeight: 'bold',
   },
   categoryContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-    marginBottom: 10,
-    gap: 40,
+    justifyContent: 'space-around',
+    marginBottom: 20,
   },
   categoryButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    backgroundColor: '#FFECD1',
-    
-    
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 18,
+    backgroundColor: 'rgba(222, 239, 222, 0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(143, 188, 143, 0.5)',
   },
   categoryButtonActive: {
-    backgroundColor: '#FFB88C',
+    backgroundColor: '#E74C3C',
+    borderColor: '#C0392B',
   },
   categoryText: {
     fontSize: 16,
-    color: '#6B4F4F',
+    color: '#5D4037',
+    fontWeight: '500',
   },
   categoryTextActive: {
     fontWeight: 'bold',
     color: '#fff',
   },
-  fixedHeader: {
-  paddingHorizontal: 20,
-  paddingTop: 28,
-},
-
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingBottom: 100,
+  },
   inputTitle: {
-    fontSize: 16,
+    fontSize: 18,
     borderWidth: 1,
-    borderColor: '#FFDAB9',
-    backgroundColor: '#FFF',
+    borderColor: 'rgba(160, 82, 45, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: 12,
     padding: 15,
     marginBottom: 20,
+    color: '#333',
   },
-  separator: {
-  textAlign: 'center',
-  color: '#FFB88C',
-  fontSize: 18,
-  marginBottom: 5,
-  fontWeight: 'bold',
-},
-
   inputContent: {
-    fontSize: 18,
-    
-    height: 420,
+    fontSize: 16,
+    minHeight: 300,
     borderWidth: 1,
-    borderColor: '#FFDAB9',
-    backgroundColor: '#FFF',
+    borderColor: 'rgba(160, 82, 45, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: 12,
     padding: 15,
-    marginBottom: 40,
+    textAlignVertical: 'top',
+    color: '#333',
   },
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: 94,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FF8A65',
+    bottom: Platform.OS === 'ios' ? 90 : 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#D9534F',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });
