@@ -6,6 +6,7 @@ import {
   Image,
   ImageBackground,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,8 +14,7 @@ import {
 } from 'react-native';
 import { API_BASE_URL, API_ENDPOINTS } from '../../constants/api';
 
-const PAGE_SIZE = 2;
-const TOTAL_PAGES = 5; // 고정된 총 페이지 수
+const PAGE_SIZE = 3;
 
 interface PostItem {
   id: number;
@@ -26,6 +26,7 @@ interface PostItem {
 const BoardScreen = () => {
   const [data, setData] = useState<PostItem[]>([]);
   const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const router = useRouter();
 
   const fetchData = async (pageNum: number) => {
@@ -34,6 +35,7 @@ const BoardScreen = () => {
         params: { page: pageNum, size: PAGE_SIZE, sort: 'id,DESC' },
       });
       setData(res.data.content);
+      setTotalPages(res.data.totalPages); // API에서 전체 페이지 수 동적으로 받아오기
     } catch (error) {
       console.error('게시글 목록 로딩 실패:', error);
     }
@@ -43,61 +45,102 @@ const BoardScreen = () => {
     fetchData(page);
   }, [page]);
 
+  // 페이지네이션에서 보여줄 최대 버튼 개수
+  const MAX_PAGE_BUTTONS = 5;
+
+  // 현재 페이지 기준으로 보여줄 페이지 버튼 배열 생성
+  const getPageButtons = () => {
+    let start = Math.max(0, page - Math.floor(MAX_PAGE_BUTTONS / 2));
+    let end = start + MAX_PAGE_BUTTONS;
+
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(0, end - MAX_PAGE_BUTTONS);
+    }
+
+    const pages = [];
+    for (let i = start; i < end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ImageBackground
         source={require('../../assets/images/chat_tree.png')}
         resizeMode="cover"
         style={styles.background}
-        imageStyle={{ top: -60 }}
       >
-        {/* 사과 아이템 */}
-        <View style={styles.appleContainer}>
+        {/* 어두운 반투명 오버레이 */}
+        <View style={styles.overlay} />
+        {/* 배경에 표시될 사과 이미지들 (터치 기능 없음) */}
+        <View style={styles.backgroundApplesContainer}>
           {data.map((item, index) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => router.push(`/boardDetail/${item.id}`)}
+            <View
+              key={`bg-apple-${item.id}`}
               style={[
-                styles.appleWrapper,
-                { top: 140 + index * 70, left: 140 + (index % 2) * 60 },
+                styles.backgroundAppleWrapper,
+                {
+                  top: 240 + index * 70,
+                  left: 90 + (index % 2) * 180,
+                },
               ]}
             >
               <Image
                 source={require('../../assets/images/chat_apple.png')}
-                style={styles.appleIcon}
+                style={styles.backgroundAppleIcon}
               />
-            </TouchableOpacity>
+            </View>
           ))}
         </View>
 
+        {/* 게시글 목록 (ScrollView) */}
+        <ScrollView contentContainerStyle={styles.listContainer}>
+          {data.length > 0 ? (
+            data.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                onPress={() => router.push(`/boardDetail/${item.id}`)}
+                style={styles.postItem}
+              >
+                <Text style={styles.postTitle}>{item.title}</Text>
+                <Text style={styles.postCategory}>카테고리: {item.category}</Text>
+                <Text style={styles.postUser}>작성자: {item.userId}</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.emptyMessage}>게시글이 없습니다.</Text>
+          )}
+        </ScrollView>
+
         {/* 페이지 화살표 + 숫자 버튼 */}
         <View style={styles.pagination}>
-          {/* 왼쪽 화살표 */}
           <TouchableOpacity
             onPress={() => page > 0 && setPage(page - 1)}
             style={styles.arrowButton}
+            disabled={page === 0}
           >
             <Text style={styles.arrowText}>{'<'}</Text>
           </TouchableOpacity>
 
-          {/* 페이지 숫자 */}
-          {Array.from({ length: TOTAL_PAGES }, (_, i) => (
+          {getPageButtons().map((pageIndex) => (
             <TouchableOpacity
-              key={i}
-              onPress={() => setPage(i)}
+              key={pageIndex}
+              onPress={() => setPage(pageIndex)}
               style={[
                 styles.pageButton,
-                page === i && styles.pageButtonActive,
+                page === pageIndex && styles.pageButtonActive,
               ]}
             >
-              <Text style={styles.pageButtonText}>{i + 1}</Text>
+              <Text style={styles.pageButtonText}>{pageIndex + 1}</Text>
             </TouchableOpacity>
           ))}
 
-          {/* 오른쪽 화살표 */}
           <TouchableOpacity
-            onPress={() => page < TOTAL_PAGES - 1 && setPage(page + 1)}
+            onPress={() => page < totalPages - 1 && setPage(page + 1)}
             style={styles.arrowButton}
+            disabled={page === totalPages - 1}
           >
             <Text style={styles.arrowText}>{'>'}</Text>
           </TouchableOpacity>
@@ -123,62 +166,115 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    zIndex: 0,
+  },
   background: {
+    top: -60,
     width,
     height,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 180,
   },
-  appleContainer: {
+  backgroundApplesContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    alignItems: 'center',
+    width: '100%',
+    height: 300,
+    zIndex: 0,
   },
-  appleWrapper: {
+  backgroundAppleWrapper: {
     position: 'absolute',
   },
-  appleIcon: {
+  backgroundAppleIcon: {
     width: 50,
     height: 50,
+    opacity: 0.8,
+  },
+  listContainer: {
+    width: width * 0.9,
+    alignItems: 'center',
+    paddingTop: 160,
+  },
+  postItem: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.18,
+    shadowRadius: 1.0,
+    elevation: 2,
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#333',
+  },
+  postCategory: {
+    fontSize: 14,
+    color: '#444',
+    marginBottom: 3,
+  },
+  postUser: {
+    fontSize: 12,
+    color: '#555',
+  },
+  emptyMessage: {
+    marginTop: 50,
+    fontSize: 16,
+    color: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    padding: 10,
+    borderRadius: 5,
   },
   pagination: {
-    position: 'absolute',
-    bottom: 200,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 10,
+    width: '100%',
+    bottom: -60,
+    zIndex: 1,
   },
   pageButton: {
     marginHorizontal: 5,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#eee',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(238, 238, 238, 0.85)',
     borderRadius: 10,
   },
   pageButtonActive: {
-    backgroundColor: '#ffcc00',
+    backgroundColor: 'rgba(255, 204, 0, 0.85)',
   },
   pageButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#333',
   },
   arrowButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     marginHorizontal: 4,
-    backgroundColor: '#ddd',
+    backgroundColor: 'rgba(221, 221, 221, 0.85)',
     borderRadius: 8,
   },
   arrowText: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
   },
   floatingButton: {
     position: 'absolute',
-    right: 20,
-    bottom: 250,
+    right: 30,
+    bottom: 220,
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -186,6 +282,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
+    zIndex: 1,
   },
   floatingButtonText: {
     fontSize: 30,

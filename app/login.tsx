@@ -293,20 +293,19 @@ const styles = StyleSheet.create({
   },
   cloudTouchable: {
     alignSelf: 'flex-end',
-    marginRight:20,
-    
-    marginTop: 50,
+    marginRight:10,
+    marginTop: 65,
   },
   cloudImageBackground: {
-    width: 100,
-    height: 85,
+    width: 90,
+    height: 75,
     justifyContent: 'center',
     alignItems: 'center',
   },
   signInText: {
     marginTop: 15,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 12,
     color: '#2C3E50',
     textAlign: 'center',
     

@@ -142,10 +142,11 @@ const SignupScreen: React.FC = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fdfbfb',
+    backgroundColor: '#F5F5F5', // 배경색은 연회색 계열입니다.
   },
   scrollContainer: {
     flexGrow: 1,
@@ -157,18 +158,18 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     marginBottom: 36,
-    color: '#333',
+    color: '#333', // 제목의 글자색은 짙은 회색 계열입니다.
   },
   input: {
     width: '100%',
     maxWidth: 360,
     height: 52,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', // 입력창의 배경색은 흰색입니다.
     borderRadius: 16,
     paddingHorizontal: 20,
     marginBottom: 16,
     fontSize: 16,
-    color: '#000',
+    color: '#000', // 입력창의 글자색은 검정색입니다.
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
@@ -177,13 +178,13 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: 'red',
-    borderWidth: 1.2,
+    borderWidth: 1.2, // 입력 오류 시 빨간 테두리가 있는 스타일입니다.
   },
   button: {
     width: '100%',
     maxWidth: 360,
     height: 52,
-    backgroundColor: '#ff8a65',
+    backgroundColor: '#4CAF50', // 버튼의 배경색을 초록 계열로 변경합니다.
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    color: '#fff',
+    color: '#fff', // 버튼 텍스트의 색상은 흰색입니다.
     fontSize: 17,
     fontWeight: '600',
   },
@@ -203,10 +204,11 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   linkText: {
-    color: '#007aff',
+    color: '#007aff', // 링크 텍스트의 색상은 파란색 계열입니다.
     textDecorationLine: 'underline',
     fontSize: 15,
   }
 });
+
 
 export default SignupScreen;
