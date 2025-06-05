@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="69e5c93b-3e5b-4e00-b556-a8ad2c991242" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/chat.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/chat.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lumia_App/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lumia_App/.idea/Lumia_App.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lumia_App/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lumia_App/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lumia_App/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Lumia_App/.idea/vcs.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
