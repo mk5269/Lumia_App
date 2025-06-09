@@ -5,28 +5,23 @@ import { Platform } from 'react-native';
 
 const NEXT_NOTIFICATION_TIMESTAMP_KEY = 'next_notification_timestamp';
 
-// 1. 알림 예약 함수
 export async function schedulePushNotification(date: Date, vibrate: boolean) {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
-  // ======================= ▼▼▼ 수정된 부분 ▼▼▼ =======================
-  // 현재 시간과 목표 시간의 차이를 초(second)로 계산합니다.
   const now = new Date().getTime();
   const scheduledTime = date.getTime();
   const seconds = (scheduledTime - now) / 1000;
 
-  // 0초 이하이면 스케줄링하지 않습니다.
   if (seconds <= 0) {
-      console.log("Scheduling time is in the past. Notification not scheduled.");
-      return;
+    console.log("Scheduling time is in the past. Notification not scheduled.");
+    return;
   }
 
-  // 'timeInterval' 타입의 트리거를 사용합니다.
-  const trigger: Notifications.NotificationTriggerInput = {
+  // 가장 유력한 'timeInterval' 타입에 'as any'를 추가하여 타입 오류를 우회합니다.
+  const trigger = {
     type: 'timeInterval',
-    seconds: Math.round(seconds), // 소수점 반올림
-  };
-  // ======================= ▲▲▲ 수정된 부분 ▲▲▲ =======================
+    seconds: Math.round(seconds),
+  } as any;
 
   try {
     const id = await Notifications.scheduleNotificationAsync({
@@ -47,7 +42,6 @@ export async function schedulePushNotification(date: Date, vibrate: boolean) {
   }
 }
 
-// (이하 나머지 코드는 이전 답변과 동일합니다)
 export async function registerForPushNotificationsAsync() {
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;

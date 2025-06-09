@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications'; // <<< [수정] import 구문 추가
+import * as Notifications from 'expo-notifications';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -23,7 +23,6 @@ import { API_BASE_URL, API_ENDPOINTS } from '../../constants/api';
 import { useMusic } from '../../context/MusicContext';
 import { registerForPushNotificationsAsync, schedulePushNotification } from '../notifications';
 
-// (이하 나머지 코드는 이전 답변과 동일합니다)
 interface UserSettingsData {
   notificationInterval: string;
   notificationTime: string | null;
@@ -135,6 +134,5 @@ const SettingsScreen = () => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F9F9FB' }, loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' }, titleRowSticky: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: '#F9F9FB', zIndex: 10 }, icon: { width: 40, height: 40, marginRight: 10 }, title: { fontSize: 26, fontWeight: '600', color: '#222' }, section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginVertical: 8, marginHorizontal: 15, shadowColor: '#000', shadowOpacity: 0.04, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, elevation: 2 }, sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }, sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 12 }, subText: { fontSize: 16, color: '#555', fontWeight: '500' }, extraText: { fontSize: 16, fontWeight: '600', color: '#444' }, musicButtons: { flexDirection: 'row', justifyContent: 'center', gap: 40, marginTop: 10 }, musicImage: { width: 100, height: 100, borderRadius: 14, marginBottom: 8 }, musicLabel: { textAlign: 'center', fontSize: 14, fontWeight: '500', color: '#444' }, selected: { borderWidth: 3, borderColor: '#6C9EFF', borderRadius: 14 }, timePicker: { marginTop: 10, padding: 14, backgroundColor: '#F1F3F5', borderRadius: 10, alignItems: 'center' }, disabledPicker: { backgroundColor: '#E9ECEF' }, disabledText: { color: '#ADB5BD' }});
 export default SettingsScreen;
