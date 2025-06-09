@@ -105,7 +105,9 @@ const MainScreen: React.FC = () => {
   // 포커스 올 때마다 질문 불러옴
   useFocusEffect(
     useCallback(() => {
-      if (token) fetchQuestion();
+    if (token && !currentQuestion) {
+      fetchQuestion();
+    }
     }, [fetchQuestion, token])
   );
 
