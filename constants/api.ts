@@ -1,5 +1,5 @@
 // 앱이 통신할 백엔드 서버의 기본 주소 (자신의 PC IP로 수정)
-export const API_BASE_URL = 'http://172.20.10.4:8080';
+export const API_BASE_URL = 'http://192.168.91.161:8080';
 
 // 실제 백엔드 엔드포인트에 맞게 경로 전부 수정!
 export const API_ENDPOINTS = {
