@@ -1,3 +1,4 @@
+// app/notification.ts
 import * as Notifications from 'expo-notifications';
 
 // 1. 알림 예약 함수 (vibrate 인자 추가)
