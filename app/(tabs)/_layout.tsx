@@ -1,29 +1,68 @@
-// app/(tabs)/_layout.tsx (CustomTabBar 사용하도록 수정)
-import { CustomTabBar } from '@/components/navigation/CustomTabBar'; // <<< 만든 커스텀 탭 바 import (경로 확인!)
-import { Tabs } from 'expo-router';
-import React from 'react';
+// app/(tabs)/_layout.tsx
+//main
+import { CustomTabBar } from '@/components/navigation/CustomTabBar';
+import { Tabs, usePathname } from 'expo-router';
+import React, { useEffect } from 'react';
+import MusicController from '../../components/MusicController';
+ 
+import { MusicProvider, useMusic } from '../../context/MusicContext';
+import { registerForPushNotificationsAsync } from '../notifications'; // 필요시 utils로 맞춰도 무방
 
-// Colors, useColorScheme 등은 CustomTabBar 에서 사용하지 않으므로 여기서 필요 없을 수 있음
+// 음악 자동 제어 컴포넌트
+function MusicRouteController() {
+  const pathname = usePathname();
+  const { isMusicOn, backgroundSoundRef } = useMusic();
+  const mutedPages = ['/healing', '/settings'];
+  useEffect(() => {
+    const controlMusic = async () => {
+      if (!backgroundSoundRef.current) return;
 
-export default function TabLayout() {
-  return (
-    <Tabs
-      // screenOptions 를 지우거나 최소화
-      // tabBarActiveTintColor 등은 CustomTabBar 내부에서 처리
-      screenOptions={{
-        headerShown: false, // 헤더는 계속 숨김
-      }}
-      // tabBar prop에 우리가 만든 커스텀 컴포넌트 전달
-      tabBar={(props) => <CustomTabBar {...props} />} // <<< 이 부분이 핵심!
-    >
-      {/* 탭 스크린 정의는 이전과 동일 */}
-      <Tabs.Screen name="chat" />
-      <Tabs.Screen name="records" />
-      <Tabs.Screen name="index" />
-      <Tabs.Screen name="board" />
-      <Tabs.Screen name="profile" />
-    </Tabs>
-  );
+      if (mutedPages.includes(pathname)) {
+        await backgroundSoundRef.current.pauseAsync();
+      } else if (isMusicOn) {
+        const status = await backgroundSoundRef.current.getStatusAsync();
+        if ('isLoaded' in status && status.isLoaded && !status.isPlaying) {
+          try {
+            await backgroundSoundRef.current.playAsync();
+          } catch (e) {
+            console.warn('음악 재생 실패:', e);
+          }
+        }
+      }
+    };
+
+    controlMusic();
+  }, [pathname, isMusicOn, backgroundSoundRef]);
+
+  return null; // UI 출력 없음
 }
 
-// StyleSheet 는 이제 이 파일에 필요 없습니다 (CustomTabBar 로 이동)
+export default function TabLayout() {
+  useEffect(() => {
+    console.log('TabLayout Mount: Attempting to register for push notifications...');
+    registerForPushNotificationsAsync()
+      .then(success => console.log('TabLayout Mount: Push notification registration success:', success))
+      .catch(error => console.error('TabLayout Mount: Push notification registration error:', error));
+  }, []);
+
+  return (
+    <MusicProvider>
+      <MusicController />
+      <MusicRouteController /> {/* 음악 자동 제어 */}
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+        }}
+        tabBar={(props) => <CustomTabBar {...props} />}
+      >
+        <Tabs.Screen name="chat" />
+        <Tabs.Screen name="records" />
+        <Tabs.Screen name="index" />
+        <Tabs.Screen name="board" />
+        <Tabs.Screen name="profile" />
+        {/* settings 탭도 쓸 거면 아래 주석 해제 */}
+        {/* <Tabs.Screen name="settings" /> */}
+      </Tabs>
+    </MusicProvider>
+  );
+}

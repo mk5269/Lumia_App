@@ -1,32 +1,50 @@
-// app/constants/api.ts
+// 앱이 통신할 백엔드 서버의 기본 주소 (자신의 PC IP로 수정)
+export const API_BASE_URL = 'http://172.20.10.4:8080';
 
-// 앱이 통신할 백엔드 서버의 기본 주소입니다.
-// 만약 로컬에서 테스트 중이라면, PC의 IP 주소와 Spring Boot 서버의 포트 번호를 사용합니다.
-export const API_BASE_URL = 'http://192.168.29.1:8080'; // ❗ 본인의 실제 PC IP 주소로 변경해주세요!
-
-// API 기능별 상세 주소(엔드포인트)들을 모아둔 객체입니다.
+// 실제 백엔드 엔드포인트에 맞게 경로 전부 수정!
 export const API_ENDPOINTS = {
-  // 인증 관련
-  LOGIN: '/api/auth/login',
-  SIGNUP: '/api/auth/signup',
+  // 인증/계정 관련 (UserController)
+  LOGIN: '/api/users/auth/login',           // ★
+  SIGNUP: '/api/users/auth/signup',         // ★
+  REFRESH_TOKEN: '/api/users/auth/refresh-token', // ★
+  LOGOUT: '/api/users/auth/logout',         // (필요시)
 
-  // 질문 관련
+  FIND_ID_BY_EMAIL: '/api/users/auth/find-id',
+
+  // 사용자 설정/프로필 (UserController)
+  GET_USER_SETTINGS: '/api/users/me/settings',
+  UPDATE_USER_SETTINGS: '/api/users/me/settings',
+  GET_USER_PROFILE: '/api/users/me/profile',
+  UPDATE_USER_PROFILE: '/api/users/me/profile',
+  UPDATE_EMAIL: '/api/users/me/email',
+  UPDATE_PASSWORD: '/api/users/me/password',
+
+  // 질문 (QuestionController)
   GET_QUESTION: '/api/questions/for-me',
 
-  // 답변 관련
+  // 답변 (AnswerController)
+
   SAVE_ANSWER: '/api/answers',
   GET_MY_ANSWERS: '/api/answers/my-records',
 
-  // 사용자 설정 관련
-  GET_USER_SETTINGS: '/api/users/me/settings',
-  UPDATE_USER_SETTINGS: '/api/users/me/settings',
+  
+  // === 게시글 (PostController) ===
+  GET_POSTS_LIST: '/api/posts/list', // GET, 예: /api/posts/list?page=0&size=5
+  CREATE_POST: '/api/posts/write',   // POST
+  // 게시글 ID가 필요한 엔드포인트들은 함수 형태로 정의
+  GET_POST_DETAIL: (postId: number | string) => `/api/posts/${postId}`,    // GET
+  UPDATE_POST: (postId: number | string) => `/api/posts/${postId}`,      // PUT
+  DELETE_POST: (postId: number | string) => `/api/posts/${postId}`,      // DELETE
 
-  // 필요하다면 다른 API 엔드포인트들도 여기에 추가합니다.
-  // 예: GET_BOARD_LIST: '/api/board',
+  // === 댓글 (CommentController) ===
+  // 특정 게시글의 댓글 목록 조회
+  GET_COMMENTS_FOR_POST: (postId: number | string) => `/api/posts/${postId}/comments`, // GET
+  // 특정 게시글에 댓글 작성
+  CREATE_COMMENT: (postId: number | string) => `/api/posts/${postId}/comments`, // POST
+  // 특정 댓글 수정
+  UPDATE_COMMENT: (commentId: number | string) => `/api/comments/${commentId}`,     // PUT
+  // 특정 댓글 삭제
+  DELETE_COMMENT: (commentId: number | string) => `/api/comments/${commentId}`,     // DELETE
 };
 
-// 사용 예시 (다른 파일에서):
-// import { API_BASE_URL, API_ENDPOINTS } from '../constants/api';
-//
-// const loginUrl = `<span class="math-inline">\{API\_BASE\_URL\}</span>{API_ENDPOINTS.LOGIN}`;
-// const questionUrl = `<span class="math-inline">\{API\_BASE\_URL\}</span>{API_ENDPOINTS.GET_QUESTION}`;
+
