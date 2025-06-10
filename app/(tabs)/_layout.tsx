@@ -3,11 +3,11 @@
 import { CustomTabBar } from '@/components/navigation/CustomTabBar';
 import { Tabs, usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
+import { LogBox } from 'react-native';
 import MusicController from '../../components/MusicController';
- 
 import { MusicProvider, useMusic } from '../../context/MusicContext';
 import { registerForPushNotificationsAsync } from '../notifications'; // 필요시 utils로 맞춰도 무방
-
+LogBox.ignoreAllLogs();
 // 음악 자동 제어 컴포넌트
 function MusicRouteController() {
   const pathname = usePathname();

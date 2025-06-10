@@ -4,14 +4,14 @@ import { useFonts } from 'expo-font';
 import { SplashScreen as ExpoSplashScreen, router, Stack } from 'expo-router'; // router 임포트 확인
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { LogBox, StyleSheet, Text, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 ExpoSplashScreen.preventAutoHideAsync();
-
+LogBox.ignoreAllLogs();
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,

@@ -1,3 +1,4 @@
+// app/(tabs)/board.tsx
 import { useIsFocused } from '@react-navigation/native'; // 이 부분 꼭 추가!
 import axios from 'axios';
 import { useRouter } from 'expo-router';

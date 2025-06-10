@@ -1,5 +1,16 @@
+<<<<<<< HEAD
 export const API_BASE_URL = 'http://172.20.10.2:8081';
 //dd
+=======
+// 앱이 통신할 백엔드 서버의 기본 주소 (자신의 PC IP로 수정)
+<<<<<<< HEAD
+export const API_BASE_URL = 'http://172.20.10.2:8081';
+
+// 실제 백엔드 엔드포인트에 맞게 경로 전부 수정!
+=======
+export const API_BASE_URL = 'http://220.67.0.215:8080';
+>>>>>>> 0053d1d2c152f96642f2fd9194cf881d41729080
+>>>>>>> hyeung
 export const API_ENDPOINTS = {
   // 인증/계정 관련 (UserController)
   LOGIN: '/api/users/auth/login',

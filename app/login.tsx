@@ -1,3 +1,4 @@
+// app/login.tsx
 import axios from 'axios';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -110,7 +111,7 @@ const handleFindIdByEmail = async () => {
     }
   } catch (error: any) {
     if (axios.isAxiosError(error) && error.response) {
-        setFindIdErrorMessage(error.response.data.message || '아이디를 찾는 중 오류가 발생했습니다.');
+        setFindIdErrorMessage(error.response.data.message || '해당 이메일로 가입된 아이디를 찾을 수 없습니다.');
       } else {
         setFindIdErrorMessage('아이디를 찾는 중 알 수 없는 오류가 발생했습니다.');
       }
@@ -151,7 +152,7 @@ const handleFindIdByEmail = async () => {
           </TouchableOpacity>
 
           <Image
-            source={require('../assets/images/main_character.gif')}
+            source={require('../assets/images/stand_Normal.gif')}
             style={styles.characterImage}
           />
 

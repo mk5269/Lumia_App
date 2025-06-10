@@ -1,9 +1,9 @@
-// app/(tabs)/boardForm.tsx
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
   ImageBackground,
   Keyboard,
   KeyboardAvoidingView,
@@ -18,20 +18,28 @@ import {
   View,
 } from 'react-native';
 
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { API_BASE_URL, API_ENDPOINTS } from '../../constants/api';
 import { useAuth } from '../../context/AuthContext';
 
 export default function BoardFormScreen() {
   const { token } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const [category, setCategory] = useState('칭찬');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const HEADER_HEIGHT = Platform.OS === 'ios' ? 180 : 100;
+
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
+      Alert.alert('입력 오류', '제목과 내용을 모두 입력해 주세요.');
       return;
     }
     try {
@@ -46,89 +54,111 @@ export default function BoardFormScreen() {
       setContent('');
       setCategory('칭찬');
       router.push('/board');
-    } catch (e) {
-      console.error(e);
-    } finally {
+    } catch (e:any) {
+  let errMsg = '';
+  const data = (e.response && e.response.data) ? e.response.data : null;
+
+  if (typeof data === 'string') {
+    errMsg = data;
+  } else if (data && typeof data === 'object') {
+    const errData = data as any;      // 여기서 타입 우회
+    if (errData.message) {
+      errMsg = errData.message;
+      if (errData.reason) {
+        errMsg += `\n사유: ${errData.reason}`;
+      }
+    } else {
+      errMsg = '게시글 작성 중 차단되었습니다.';
+    }
+  } else {
+    errMsg = '게시글 작성 중 차단되었습니다.';
+  }
+  Alert.alert('작성 차단', errMsg);
+}
+
+ finally {
       setIsSubmitting(false);
     }
   };
 
-return (
-  <ImageBackground
-    source={require('../../assets/images/chat_tree.png')}
-    resizeMode="cover"
-    style={styles.backgroundImage}
-  >
-    {/* SafeAreaView 바깥에 위치 */}
-    <View style={styles.fixedHeader}>
-      <Text style={styles.headerTitle}>Share My Light</Text>
-      <Text style={styles.separator}>⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆</Text>
-      <View style={styles.categoryContainer}>
-        {['칭찬', '격려', '기타'].map((item) => (
-          <TouchableOpacity
-            key={item}
-            style={[
-              styles.categoryButton,
-              category === item && styles.categoryButtonActive,
-            ]}
-            onPress={() => setCategory(item)}
-          >
-            <Text
+  return (
+    <ImageBackground
+      source={require('../../assets/images/chat_tree.png')}
+      resizeMode="cover"
+      style={styles.backgroundImage}
+    >
+      <View style={styles.fixedHeader}>
+        <Text style={styles.headerTitle}>Share My Light</Text>
+        <Text style={styles.separator}>
+          ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆ ⋆
+        </Text>
+        <View style={styles.categoryContainer}>
+          {['칭찬', '격려', '기타'].map((item) => (
+            <TouchableOpacity
+              key={item}
               style={[
-                styles.categoryText,
-                category === item && styles.categoryTextActive,
+                styles.categoryButton,
+                category === item && styles.categoryButtonActive,
               ]}
+              onPress={() => setCategory(item)}
             >
-              {item}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.categoryText,
+                  category === item && styles.categoryTextActive,
+                ]}
+              >
+                {item}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
-    </View>
-
-    {/* SafeArea 적용은 나머지 콘텐츠만 감싸기 */}
-    <SafeAreaView style={{ flex: 1 }}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+          keyboardVerticalOffset={HEADER_HEIGHT}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            <TextInput
-              style={styles.inputTitle}
-              placeholder="제목을 입력하세요"
-              value={title}
-              onChangeText={setTitle}
-              placeholderTextColor="#A8A8A8"
-            />
-            <TextInput
-              style={styles.inputContent}
-              placeholder="당신의 이야기를 들려주세요"
-              value={content}
-              onChangeText={setContent}
-              multiline
-              textAlignVertical="top"
-              placeholderTextColor="#A8A8A8"
-            />
-          </ScrollView>
-
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            <Ionicons name="paper-plane-outline" size={24} color="white" />
-          </TouchableOpacity>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1 }}>
+              <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+              >
+                <TextInput
+                  style={styles.inputTitle}
+                  placeholder="제목을 입력하세요"
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholderTextColor="#A8A8A8"
+                />
+                <TextInput
+                  style={styles.inputContent}
+                  placeholder="당신의 이야기를 들려주세요"
+                  value={content}
+                  onChangeText={setContent}
+                  multiline
+                  textAlignVertical="top"
+                  placeholderTextColor="#A8A8A8"
+                />
+              </ScrollView>
+              <TouchableOpacity
+                style={[
+                  styles.fab,
+                  { bottom: insets.bottom + tabBarHeight + 10 },
+                ]}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                <Ionicons name="paper-plane-outline" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    </SafeAreaView>
-  </ImageBackground>
-);
-
+      </SafeAreaView>
+    </ImageBackground>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -212,7 +242,6 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: Platform.OS === 'ios' ? 90 : 24,
     width: 60,
     height: 60,
     borderRadius: 30,
