@@ -242,6 +242,7 @@ const MainScreen: React.FC = () => {
   );
 };
 
+// 기존 스타일에 onDemandButton 스타일 추가
 const styles = StyleSheet.create({
   onDemandButton: { backgroundColor: '#1E88E5', paddingVertical: 12, paddingHorizontal: 25, borderRadius: 25, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2, marginTop: 10, },
   onDemandButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold', },

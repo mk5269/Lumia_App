@@ -1,4 +1,3 @@
-// app/boardDetail/[id].tsx
 import { Feather } from '@expo/vector-icons';
 import axios from 'axios';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
@@ -6,20 +5,19 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  FlatList, // ImageBackground 추가
   Image,
   ImageBackground,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_BASE_URL, API_ENDPOINTS } from '../../constants/api'; // 경로 확인 필요
 import { useAuth } from '../../context/AuthContext'; // 경로 확인 필요
 
@@ -143,17 +141,17 @@ const BoardDetail = () => {
     Alert.alert("게시글 삭제", "정말로 이 게시글을 삭제하시겠습니까?",
       [{ text: "취소", style: "cancel" },
        { text: "삭제", style: "destructive", onPress: async () => {
-            try {
-              const apiUrl = `${API_BASE_URL}${API_ENDPOINTS.DELETE_POST(postIdFromParams)}`;
-              await axios.delete(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
-              Alert.alert("성공", "게시글이 삭제되었습니다.");
-              router.back();
-            } catch (error: any) {
-              console.error('게시글 삭제 실패 (boardDetail.tsx):', error.response?.data || error.message);
-              Alert.alert("오류", error.response?.data?.message || "게시글 삭제 중 오류가 발생했습니다.");
-            }
-          },
+          try {
+            const apiUrl = `${API_BASE_URL}${API_ENDPOINTS.DELETE_POST(postIdFromParams)}`;
+            await axios.delete(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
+            Alert.alert("성공", "게시글이 삭제되었습니다.");
+            router.back();
+          } catch (error: any) {
+            console.error('게시글 삭제 실패 (boardDetail.tsx):', error.response?.data || error.message);
+            Alert.alert("오류", error.response?.data?.message || "게시글 삭제 중 오류가 발생했습니다.");
+          }
         },
+       },
       ]
     );
   };
@@ -163,16 +161,16 @@ const BoardDetail = () => {
      Alert.alert("댓글 삭제", "정말로 이 댓글을 삭제하시겠습니까?",
       [{ text: "취소", style: "cancel" },
        { text: "삭제", style: "destructive", onPress: async () => {
-            try {
-              const apiUrl = `${API_BASE_URL}${API_ENDPOINTS.DELETE_COMMENT(commentId)}`;
-              await axios.delete(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
-              await fetchComments();
-            } catch (error: any) {
-              console.error('댓글 삭제 실패 (boardDetail.tsx):', error.response?.data || error.message);
-              Alert.alert("오류", error.response?.data?.message || "댓글 삭제 실패");
-            }
-          },
+          try {
+            const apiUrl = `${API_BASE_URL}${API_ENDPOINTS.DELETE_COMMENT(commentId)}`;
+            await axios.delete(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
+            await fetchComments();
+          } catch (error: any) {
+            console.error('댓글 삭제 실패 (boardDetail.tsx):', error.response?.data || error.message);
+            Alert.alert("오류", error.response?.data?.message || "댓글 삭제 실패");
+          }
         },
+       },
       ]
     );
   };
@@ -203,7 +201,7 @@ const BoardDetail = () => {
   const renderCommentItem = ({ item }: { item: Comment }) => {
     const isCommentAuthor = item.userId === currentUserId;
     return (
-      <View style={styles.commentBox}>
+      <View key={item.id} style={styles.commentBox}>
         <View style={styles.commentHeaderRow}>
             <Text style={styles.commentUser}>{item.userId}</Text>
             <Text style={styles.commentMeta}>
@@ -241,102 +239,117 @@ const BoardDetail = () => {
     );
   };
 
+  // 로딩 중 화면
   if (loading || !post) {
     return (
-      <SafeAreaView style={styles.loadingOrErrorContainer}>
-        <ImageBackground
-          source={require('../../assets/images/chat_tree.png')} // 로딩 중에도 배경 유지
-          resizeMode="cover"
-          style={styles.backgroundImageFill}
-        >
-            <View style={styles.screenOverlayForLoading} />
-            <ActivityIndicator size="large" color="#A0522D" />
-            <Text style={styles.loadingText}>정보를 불러오는 중...</Text>
-        </ImageBackground>
-      </SafeAreaView>
-    );
-  }
-
-  if (!postIdFromParams) { // 이 부분은 useEffect에서 이미 처리하지만, 방어적 코드로 둡니다.
-    return (
-      <SafeAreaView style={styles.loadingOrErrorContainer}>
-         <ImageBackground
-          source={require('../../assets/images/chat_tree.png')}
-          resizeMode="cover"
-          style={styles.backgroundImageFill}
-        >
-            <View style={styles.screenOverlayForLoading} />
-            <Text style={styles.errorText}>게시글 정보를 불러올 수 없습니다.</Text>
-        </ImageBackground>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
       <ImageBackground
-        source={require('../../assets/images/chat_tree.png')} // 경로 확인!
+        source={require('../../assets/images/chat_tree.png')}
         resizeMode="cover"
         style={styles.backgroundImageFill}
       >
+        <SafeAreaView style={styles.loadingOrErrorContainer}>
+          <View style={styles.screenOverlayForLoading} />
+          <ActivityIndicator size="large" color="#A0522D" />
+          <Text style={styles.loadingText}>정보를 불러오는 중...</Text>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
+
+  // 에러 또는 게시글 ID가 없을 경우 화면
+  if (!postIdFromParams) {
+    return (
+      <ImageBackground
+        source={require('../../assets/images/chat_tree.png')}
+        resizeMode="cover"
+        style={styles.backgroundImageFill}
+      >
+        <SafeAreaView style={styles.loadingOrErrorContainer}>
+          <View style={styles.screenOverlayForLoading} />
+          <Text style={styles.errorText}>게시글 정보를 불러올 수 없습니다.</Text>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
+
+  // 메인 화면
+  return (
+    <ImageBackground
+      source={require('../../assets/images/chat_tree.png')}
+      resizeMode="cover"
+      style={styles.backgroundImageFill}
+    >
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.screenOverlay} />
         <KeyboardAvoidingView
           style={styles.keyboardAvoidingContainer}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
-          <FlatList
-            ListHeaderComponent={() => (
-              <View style={styles.postOuterContainer}>
-                <View style={styles.postInnerContainer}>
-                    <View style={styles.titleRow}>
-                        <View style={styles.categoryBadge}>
-                        {/* 예시: 카테고리 옆에 작은 사과 아이콘 */}
-                        <Image source={require('../../assets/images/chat_apple.png')} style={styles.smallAppleIcon} />
-                        <Text style={styles.categoryText}>{post.category}</Text>
-                        </View>
-                        <Text style={styles.title}>{post.title}</Text>
-                    </View>
-                    <View style={styles.metaRow}>
-                        <Text style={styles.metaText}>작성자: {post.userId}</Text>
-                        <Text style={styles.metaText}>
-                        {new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                        </Text>
-                    </View>
-
-                    {isPostAuthor && (
-                        <View style={styles.authorActionsContainer}>
-                        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={handleEditPost}>
-                            <Feather name="edit" size={16} color="#fff" />
-                            <Text style={styles.actionButtonText}>수정</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDeletePost}>
-                            <Feather name="trash" size={16} color="#fff" />
-                            <Text style={styles.actionButtonText}>삭제</Text>
-                        </TouchableOpacity>
-                        </View>
-                    )}
-                    <View style={styles.contentDivider} />
-                    <ScrollView style={styles.bodyScroll} contentContainerStyle={styles.bodyContentContainer}>
-                        <Text style={styles.body}>{post.content}</Text>
-                    </ScrollView>
-                    <View style={styles.contentDivider} />
-                    <Text style={styles.commentsTitle}>댓글 {comments.length}개</Text>
+          {/* 스크롤 가능한 전체 컨테이너 */}
+            {/* 게시글 내용 */}
+            <View style={styles.postOuterContainer}>
+              <View style={styles.postInnerContainer}>
+                <View style={styles.titleRow}>
+                  <View style={styles.categoryBadge}>
+                    <Image source={require('../../assets/images/chat_apple.png')} style={styles.smallAppleIcon} />
+                    <Text style={styles.categoryText}>{post.category}</Text>
+                  </View>
+                  <Text style={styles.title}>{post.title}</Text>
                 </View>
-              </View>
-            )}
-            data={comments}
-            renderItem={renderCommentItem}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.commentsListContainer}
-            ListEmptyComponent={
-              <View style={styles.emptyCommentsContainer}>
-                  <Text style={styles.emptyCommentsText}>아직 댓글이 없어요. 첫 댓글을 남겨보세요!</Text>
-              </View>
-            }
-            keyboardShouldPersistTaps="handled"
-          />
+                <View style={styles.metaRow}>
+                  <Text style={styles.metaText}>작성자: {post.userId}</Text>
+                  <Text style={styles.metaText}>
+                    {new Date(post.createdAt).toLocaleDateString('ko-KR', {
+                      year: 'numeric', month: 'long', day: 'numeric'
+                    })}
+                  </Text>
+                </View>
 
+                {isPostAuthor && (
+                  <View style={styles.authorActionsContainer}>
+                    <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={handleEditPost}>
+                      <Feather name="edit" size={16} color="#fff" />
+                      <Text style={styles.actionButtonText}>수정</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDeletePost}>
+                      <Feather name="trash" size={16} color="#fff" />
+                      <Text style={styles.actionButtonText}>삭제</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                <View style={styles.contentDivider} />
+                <View style={styles.bodyContentContainer}>
+                  <Text style={styles.body}>{post.content}</Text>
+                </View>
+                <View style={styles.contentDivider} />
+                <Text style={styles.commentsTitle}>댓글 {comments.length}개</Text>
+              </View>
+            </View>
+
+            {/* 댓글 목록 */}
+<View style={{ maxHeight:600, flex: 1 }}>
+  <ScrollView
+    style={{ flex: 1 }}
+    contentContainerStyle={{ paddingBottom: 10 }}
+    showsVerticalScrollIndicator={true}
+  >
+    <View style={styles.commentsListContainer}>
+      {comments.length === 0 ? (
+        <View style={styles.emptyCommentsContainer}>
+          <Text style={styles.emptyCommentsText}>아직 댓글이 없어요. 첫 댓글을 남겨보세요!</Text>
+        </View>
+      ) : (
+        comments.map((item) => renderCommentItem({ item }))
+      )}
+    </View>
+  </ScrollView>
+</View>
+
+          
+
+          {/* 댓글 입력창 (키보드 위에 고정) */}
           {editingCommentId === null && (
             <View style={styles.commentInputSection}>
               <TextInput
@@ -357,63 +370,62 @@ const BoardDetail = () => {
             </View>
           )}
         </KeyboardAvoidingView>
-      </ImageBackground>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
+
 };
 
 export default BoardDetail;
 
-// 스타일 정의
 const styles = StyleSheet.create({
-  safeArea: { // 기존 container 역할
+  safeArea: {
     flex: 1,
   },
-  backgroundImageFill: { // ImageBackground에 적용
+  backgroundImageFill: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
-  screenOverlay: { // 메인 화면 반투명 오버레이
+  screenOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 247, 240, 0.85)', // 따뜻한 크림색 반투명
-    zIndex: 0, // 내용물보다 뒤에 있도록
+    backgroundColor: 'rgba(255, 247, 240, 0.85)',
+    zIndex: 0,
   },
-  screenOverlayForLoading: { // 로딩/에러 화면용 오버레이 (좀 더 불투명하게)
+  screenOverlayForLoading: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255, 247, 240, 0.95)',
     zIndex: 0,
   },
   keyboardAvoidingContainer: {
     flex: 1,
-    zIndex: 1, // 오버레이 위에 있도록
+    zIndex: 1,
   },
-  loadingOrErrorContainer: { // 로딩 또는 에러 시 전체 화면 컨테이너
+  
+  loadingOrErrorContainer: {
     flex: 1,
-    // justifyContent: 'center', // ImageBackground가 flex:1을 가지므로 여기선 불필요
-    // alignItems: 'center',
+    justifyContent: 'center', // 로딩, 에러 메시지를 중앙에 배치하기 위해 추가
+    alignItems: 'center',     // 로딩, 에러 메시지를 중앙에 배치하기 위해 추가
   },
-  loadingText: { // 로딩 중 텍스트 (ActivityIndicator 아래)
-      marginTop: 15,
-      fontSize: 16,
-      color: '#A0522D',
-      textAlign: 'center',
-      zIndex: 1, // 오버레이 위에
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
+    color: '#A0522D',
+    textAlign: 'center',
+    zIndex: 1,
   },
-  errorText: { // 에러 메시지 텍스트
+  errorText: {
     color: '#A0522D',
     fontSize: 16,
     textAlign: 'center',
     padding: 20,
-    zIndex: 1, // 오버레이 위에
+    zIndex: 1,
   },
-  postOuterContainer: { // ListHeaderComponent의 루트 View, 패딩 등 외부 스타일 담당
-    // backgroundColor: 'rgba(255,255,255,0.7)', // 게시글 내용 영역 배경 (선택 사항)
-    // marginHorizontal: 10, // 좌우 여백 (선택 사항)
-    // borderRadius: 10, // 모서리 둥글게 (선택 사항)
-    // marginTop: 10, // 상단 여백 (선택 사항)
-    // paddingBottom: 20,
+  postOuterContainer: {
+    // ScrollView 내의 컨텐츠 컨테이너 역할
   },
-  postInnerContainer: { // 실제 게시글 컨텐츠들을 감싸는 역할
-    backgroundColor: 'rgba(255, 253, 250, 0.75)', // 내용을 위한 살짝 불투명한 배경
+  postInnerContainer: {
+    backgroundColor: 'rgba(255, 253, 250, 0.75)',
     marginHorizontal: 15,
     borderRadius: 15,
     paddingVertical: 15,
@@ -426,23 +438,23 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   titleRow: {
-    paddingHorizontal: 15, // InnerContainer 내부 패딩
-    paddingTop: 5,      // InnerContainer 내부 패딩
+    paddingHorizontal: 15,
+    paddingTop: 5,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
     flexWrap: 'wrap',
   },
   categoryBadge: {
-    flexDirection: 'row', // 아이콘과 텍스트를 가로로 배열
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFDAB9',
     paddingVertical: 5,
-    paddingHorizontal: 10, // 아이콘 들어갈 공간 고려
+    paddingHorizontal: 10,
     borderRadius: 12,
     marginRight: 10,
   },
-  smallAppleIcon: { // 카테고리 배지 옆 작은 사과
+  smallAppleIcon: {
     width: 14,
     height: 14,
     marginRight: 5,
@@ -453,13 +465,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    fontSize: 24, // 약간 줄임
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#5D4037',
     flexShrink: 1,
   },
   metaRow: {
-    paddingHorizontal: 15, // InnerContainer 내부 패딩
+    paddingHorizontal: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -469,15 +481,15 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   metaText: {
-    fontSize: 12, // 약간 줄임
+    fontSize: 12,
     color: '#8C7B70',
   },
   authorActionsContainer: {
-    paddingHorizontal: 15, // InnerContainer 내부 패딩
+    paddingHorizontal: 15,
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginVertical: 10, // 간격 조정
+    marginVertical: 10,
     gap: 10,
   },
   actionButton: {
@@ -495,46 +507,42 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: '#fff',
-    fontSize: 13, // 약간 줄임
+    fontSize: 13,
     fontWeight: '600',
     marginLeft: 5,
   },
   contentDivider: {
-    marginHorizontal: 15, // InnerContainer 내부 패딩
+    marginHorizontal: 15,
     height: 1,
     backgroundColor: '#F0E0D0',
-    marginVertical: 15, // 간격 조정
+    marginVertical: 15,
   },
-  bodyScroll: { // 게시글 본문 내용이 길 경우를 대비한 ScrollView
-    maxHeight: 300, // 본문 영역 최대 높이 제한 (선택 사항)
-  },
-  bodyContentContainer: { // bodyScroll의 contentContainerStyle
-     paddingHorizontal: 15, // InnerContainer 내부 패딩
+  bodyContentContainer: {
+    paddingHorizontal: 15,
   },
   body: {
-    fontSize: 16, // 약간 줄임
+    fontSize: 16,
     color: '#6B4F4F',
-    lineHeight: 26, // 줄간격 조정
+    lineHeight: 26,
   },
   commentsTitle: {
-    fontSize: 18, // 약간 줄임
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 20, // 간격 조정
+    marginTop: 20,
     marginBottom: 16,
     color: '#5D4037',
-    paddingHorizontal: 15, // InnerContainer 내부 패딩
+    paddingHorizontal: 15,
   },
-  commentsListContainer: { // FlatList의 contentContainerStyle
-    paddingHorizontal: 15, // 화면 좌우 여백
-    paddingBottom: Platform.OS === 'ios' ? 170 : 150,
+  commentsListContainer: {
+    paddingHorizontal: 15,
   },
   commentBox: {
     marginBottom: 16,
-    padding: 15, // 패딩 약간 줄임
-    backgroundColor: 'rgba(255, 250, 245, 0.85)', // 좀 더 불투명하게
-    borderRadius: 10, // 모서리 약간 줄임
+    padding: 15,
+    backgroundColor: 'rgba(255, 250, 245, 0.85)',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#F5E5D5', // 테두리 색 조정
+    borderColor: '#F5E5D5',
     shadowColor: '#B08D57',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
@@ -547,39 +555,39 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   commentUser: {
-    fontSize: 14, // 약간 줄임
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#A0522D',
   },
   commentMeta: {
-    fontSize: 11, // 약간 줄임
+    fontSize: 11,
     color: '#B08D57',
     marginLeft: 4,
   },
   commentContent: {
-    fontSize: 14, // 약간 줄임
+    fontSize: 14,
     color: '#6B4F4F',
-    lineHeight: 21, // 줄간격 조정
+    lineHeight: 21,
   },
   iconButtonGroup: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: 8, // 간격 약간 줄임
-    gap: 12, // 간격 약간 줄임
+    marginTop: 8,
+    gap: 12,
   },
   iconButton: {
     padding: 4,
   },
   inputInline: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)', // 거의 불투명
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     color: '#5D4037',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E0CFC0', // 테두리 색 조정
+    borderColor: '#E0CFC0',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 14, // 약간 줄임
-    minHeight: 50, // 높이 조정
+    fontSize: 14,
+    minHeight: 50,
     textAlignVertical: 'top',
     marginBottom: 10,
   },
@@ -611,10 +619,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: '#F0E0D0',
-    backgroundColor: 'rgba(255, 247, 240, 0.95)', // 거의 불투명
-    // marginBottom 제거 (KeyboardAvoidingView가 핸들)
+    backgroundColor: 'rgba(255, 247, 240, 0.95)',
   },
-  input: { // 댓글 입력 TextInput
+  input: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,

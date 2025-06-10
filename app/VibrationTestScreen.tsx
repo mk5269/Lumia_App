@@ -1,4 +1,3 @@
-
 // app/VibrationTestScreen.tsx
 
 import * as Haptics from 'expo-haptics';
