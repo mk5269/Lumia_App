@@ -26,8 +26,8 @@ import { registerForPushNotificationsAsync, schedulePushNotification } from '../
 interface UserSettingsData {
   notificationInterval: string;
   notificationTime: string | null;
-  inAppNotificationEnabled: boolean;
   pushNotificationEnabled: boolean;
+  lastIssuedAt: string | null;
 }
 
 const SettingsScreen = () => {
@@ -81,10 +81,30 @@ const SettingsScreen = () => {
         nextNotificationDate.setMinutes(minute);
         nextNotificationDate.setSeconds(0);
         
-        if (nextNotificationDate.getTime() < new Date().getTime()) {
+        const now = new Date();
+        
+        // 오늘 마지막으로 질문을 받은 기록이 있는지 확인합니다.
+        let lastIssuedDate: Date | null = null;
+        if (currentSettings.lastIssuedAt) {
+            lastIssuedDate = new Date(currentSettings.lastIssuedAt);
+        }
+
+        const isToday = (someDate: Date) => {
+            const today = new Date();
+            return someDate.getDate() === today.getDate() &&
+                   someDate.getMonth() === today.getMonth() &&
+                   someDate.getFullYear() === today.getFullYear();
+        };
+
+        // 조건 확인:
+        // 1. 오늘 이미 질문을 받았다면, 무조건 다음 날로 예약합니다.
+        // 2. 오늘 질문을 아직 안 받았지만, 설정하려는 시간이 이미 지났다면 다음 날로 예약합니다.
+        if ((lastIssuedDate && isToday(lastIssuedDate)) || nextNotificationDate.getTime() < now.getTime()) {
             nextNotificationDate.setDate(nextNotificationDate.getDate() + 1);
         }
+        
         await schedulePushNotification(nextNotificationDate, true);
+
       } else {
         Alert.alert("알림 권한 필요", "알림을 받으려면 앱 설정에서 알림 권한을 허용해주세요.");
         handleSaveSettings({ ...currentSettings, pushNotificationEnabled: false });
@@ -132,7 +152,7 @@ const SettingsScreen = () => {
         <View style={styles.section}><Text style={styles.sectionTitle}>환경 설정</Text><View style={styles.sectionHeader}><Text style={styles.extraText}>앱 버전</Text><Text style={styles.extraText}>v{Constants.manifest?.version ?? '1.0.0'}</Text></View></View>
       </ScrollView>
     </SafeAreaView>
-  );
+   );
 };
 const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F9F9FB' }, loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' }, titleRowSticky: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: '#F9F9FB', zIndex: 10 }, icon: { width: 40, height: 40, marginRight: 10 }, title: { fontSize: 26, fontWeight: '600', color: '#222' }, section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginVertical: 8, marginHorizontal: 15, shadowColor: '#000', shadowOpacity: 0.04, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, elevation: 2 }, sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }, sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 12 }, subText: { fontSize: 16, color: '#555', fontWeight: '500' }, extraText: { fontSize: 16, fontWeight: '600', color: '#444' }, musicButtons: { flexDirection: 'row', justifyContent: 'center', gap: 40, marginTop: 10 }, musicImage: { width: 100, height: 100, borderRadius: 14, marginBottom: 8 }, musicLabel: { textAlign: 'center', fontSize: 14, fontWeight: '500', color: '#444' }, selected: { borderWidth: 3, borderColor: '#6C9EFF', borderRadius: 14 }, timePicker: { marginTop: 10, padding: 14, backgroundColor: '#F1F3F5', borderRadius: 10, alignItems: 'center' }, disabledPicker: { backgroundColor: '#E9ECEF' }, disabledText: { color: '#ADB5BD' }});
 export default SettingsScreen;

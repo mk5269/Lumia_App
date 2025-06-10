@@ -11,6 +11,7 @@ import {
   Button,
   Image,
   Keyboard,
+  LogBox,
   Modal,
   Platform,
   StyleSheet,
@@ -28,7 +29,9 @@ import { API_BASE_URL, API_ENDPOINTS } from '../../constants/api';
  
 import { schedulePushNotification } from '../notifications';
 
-// (기존 인터페이스 및 아이콘 정의는 동일)
+LogBox.ignoreAllLogs();
+
+// (인터페이스, 아이콘, 전역 함수 등 이전 코드는 동일)
 interface QuestionDto {
   questionId: number;
   questionText: string;
@@ -73,75 +76,48 @@ const MainScreen: React.FC = () => {
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
-  
-  // ======================= ▼▼▼ 상태 추가 ▼▼▼ =======================
   const [isFetchingOnDemand, setIsFetchingOnDemand] = useState(false);
-  // ======================= ▲▲▲ 상태 추가 ▲▲▲ =======================
 
   const router = useRouter();
   const { token } = useAuth();
 
   const fetchQuestion = useCallback(async (isManuallyTriggered = false) => {
-    if (!token) {
-      if (isManuallyTriggered) Alert.alert("오류", "로그인이 필요합니다.");
-      setCurrentQuestion({ questionId: 0, questionText: "로그인하고 루미아와 대화해보세요!", questionType: "SYSTEM" });
-      return;
-    }
-    // 수동 새로고침일 때만 로딩 인디케이터 표시
+    if (!token) { if (isManuallyTriggered) Alert.alert("오류", "로그인이 필요합니다."); setCurrentQuestion({ questionId: 0, questionText: "로그인하고 루미아와 대화해보세요!", questionType: "SYSTEM" }); return; }
     if (isManuallyTriggered) setIsLoadingQuestion(true);
-
     try {
       const response = await axios.get<NewMessageResponseDto>(`${API_BASE_URL}${API_ENDPOINTS.GET_QUESTION}`, { headers: { Authorization: `Bearer ${token}` } });
       if (response.data && response.data.newMessage) {
         setCurrentQuestion(response.data.newMessage);
         setShowNewMessageIndicator(response.data.hasNewMessage);
       } else if (isManuallyTriggered) {
-        // 수동 새로고침 시에만 "새 질문 없음" 알림, 기존 질문은 유지
         Alert.alert("알림", "오늘은 더 이상 새로운 정기 질문이 없어요.");
       }
-    } catch (error) {
-      if (isManuallyTriggered) Alert.alert('오류', '질문을 가져오는 중 오류가 발생했습니다.');
-    } finally {
-      if (isManuallyTriggered) setIsLoadingQuestion(false);
-    }
+    } catch (error) { if (isManuallyTriggered) Alert.alert('오류', '질문을 가져오는 중 오류가 발생했습니다.');
+    } finally { if (isManuallyTriggered) setIsLoadingQuestion(false); }
   }, [token]);
 
   useFocusEffect(
     useCallback(() => {
-      if (token) {
-        fetchQuestion(false); // 처음 들어올 땐 수동 새로고침 아님
-        checkAndRescheduleNotification(token);
-      }
+      if (token) { fetchQuestion(false); checkAndRescheduleNotification(token); }
     }, [fetchQuestion, token])
   );
   
-  // ======================= ▼▼▼ 함수 추가 ▼▼▼ =======================
   const handleOnDemandQuestion = async () => {
       if (!token || isFetchingOnDemand) return;
       setIsFetchingOnDemand(true);
       try {
-          const response = await axios.get<NewMessageResponseDto>(`${API_BASE_URL}${API_ENDPOINTS.GET_ON_DEMAND_QUESTION}`, {
-              headers: { Authorization: `Bearer ${token}` }
-          });
+          const response = await axios.get<NewMessageResponseDto>(`${API_BASE_URL}${API_ENDPOINTS.GET_ON_DEMAND_QUESTION}`, { headers: { Authorization: `Bearer ${token}` } });
           if (response.data && response.data.newMessage) {
               setCurrentQuestion(response.data.newMessage);
-              setShowNewMessageIndicator(false); // 추가 질문은 '새로운 이야기' 인디케이터를 띄우지 않음
+              setShowNewMessageIndicator(false);
           }
       } catch (error: any) {
-          if (axios.isAxiosError(error) && error.response) {
-              // 백엔드에서 보낸 에러 메시지(예: "하루에 한 번만")를 표시
-              Alert.alert("알림", error.response.data);
-          } else {
-              Alert.alert("오류", "추가 질문을 가져오는 중 오류가 발생했습니다.");
-          }
-      } finally {
-          setIsFetchingOnDemand(false);
-      }
+          if (axios.isAxiosError(error) && error.response) { Alert.alert("알림", error.response.data); }
+          else { Alert.alert("오류", "추가 질문을 가져오는 중 오류가 발생했습니다."); }
+      } finally { setIsFetchingOnDemand(false); }
   };
-  // ======================= ▲▲▲ 함수 추가 ▲▲▲ =======================
-
-  // (handleSubmitAnswer는 답변 후 fetchQuestion(true) -> fetchQuestion(false)로 변경하여, 답변 후엔 기존 질문이 유지되도록 함)
-   const handleSubmitAnswer = async () => {
+  
+  const handleSubmitAnswer = async () => {
     if (!userAnswer.trim()) { Alert.alert('알림', '답변을 입력해주세요.'); return; }
     if (!currentQuestion || !token) { Alert.alert('오류', '답변을 저장하기 위한 정보가 부족합니다.'); return; }
     setIsSubmittingAnswer(true);
@@ -150,21 +126,60 @@ const MainScreen: React.FC = () => {
       Alert.alert('기록 완료!', '네 이야기가 기록되었어.');
       setUserAnswer('');
       setIsModalVisible(false);
-      // 답변 후에는 질문을 새로고침하지 않고 현재 상태를 유지합니다.
-      // 다음 정기 질문은 다음 날 시간이 되어야 받을 수 있습니다.
-      fetchQuestion(false);
+      setCurrentQuestion(null);
     } catch (error) { Alert.alert('오류', '답변 저장 중 오류가 발생했습니다.'); } finally { setIsSubmittingAnswer(false); }
   };
   
-  // (이하 나머지 렌더링 함수들은 동일)
   const handleShopPress = () => Alert.alert('상점', '상점 기능은 준비 중입니다.');
   const handleHospitalPress = () => router.push('/healing');
   const handleSettingsPress = () => router.push('/settings');
   const handleOpenQuestionModal = () => { if (!currentQuestion) { Alert.alert("알림", "표시할 질문이 없거나 로딩 중입니다.", [{ text: "질문 새로고침", onPress: () => fetchQuestion(true) }, { text: "확인" }]); return; } setIsModalVisible(true); setShowNewMessageIndicator(false); };
   const handleCancelAnswer = () => { setUserAnswer(''); setIsModalVisible(false); };
-  const renderCharacterContent = () => (<View style={styles.characterContainer}><AnimatedCharacter source={icons.egg} style={styles.characterImage} onCharacterPress={handleOpenQuestionModal} />{showNewMessageIndicator && currentQuestion && (<TouchableOpacity style={styles.newMessageIconContainer} onPress={handleOpenQuestionModal}><View style={styles.tempNewMessageIcon}><Text style={styles.tempNewMessageIconText}>!</Text></View></TouchableOpacity>)}</View>);
-  const renderMessageArea = () => { if (isLoadingQuestion && !isModalVisible) { return <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 20 }} />; } if (showNewMessageIndicator && currentQuestion) { return (<View style={styles.messagePromptContainer}><Text style={styles.messagePromptText}>새로운 이야기가 도착했어요!</Text><Text style={styles.messagePromptHintText}>(캐릭터를 눌러 확인해보세요)</Text></View>); } if (currentQuestion && !isModalVisible && !showNewMessageIndicator) { return (<TouchableOpacity style={styles.questionBubble} onPress={handleOpenQuestionModal}><Text style={styles.questionText}>{currentQuestion.questionText}</Text></TouchableOpacity>); } if (!isModalVisible) { return (<View style={styles.noQuestionContainer}><Text style={styles.noQuestionText}>오늘은 어떤 이야기를 해볼까요?</Text><TouchableOpacity onPress={() => fetchQuestion(true)} style={styles.retryButton}><Text style={styles.retryButtonText}>새로운 이야기 찾기</Text></TouchableOpacity></View>); } return null; };
   
+  const renderCharacterContent = () => (<View style={styles.characterContainer}><AnimatedCharacter source={icons.egg} style={styles.characterImage} onCharacterPress={handleOpenQuestionModal} />{showNewMessageIndicator && currentQuestion && (<TouchableOpacity style={styles.newMessageIconContainer} onPress={handleOpenQuestionModal}><View style={styles.tempNewMessageIcon}><Text style={styles.tempNewMessageIconText}>!</Text></View></TouchableOpacity>)}</View>);
+  
+  // ======================= ▼▼▼ 수정된 부분 ▼▼▼ =======================
+  const renderMessageArea = () => {
+    // 로딩 중일 때는 아무것도 표시하지 않음 (또는 로딩 인디케이터)
+    if (isLoadingQuestion && !isModalVisible) {
+      return <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 20 }} />;
+    }
+    // 새 메시지 도착 알림
+    if (showNewMessageIndicator && currentQuestion) {
+      return (
+        <View style={styles.messagePromptContainer}>
+          <Text style={styles.messagePromptText}>새로운 이야기가 도착했어요!</Text>
+          <Text style={styles.messagePromptHintText}>(캐릭터를 눌러 확인해보세요)</Text>
+        </View>
+      );
+    }
+    // 현재 질문이 있을 때
+    if (currentQuestion && !isModalVisible) {
+      return (
+        <TouchableOpacity style={styles.questionBubble} onPress={handleOpenQuestionModal}>
+          <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
+        </TouchableOpacity>
+      );
+    }
+    // 현재 질문이 없을 때 ('추가 질문' 버튼을 포함한 UI)
+    if (!currentQuestion && !isModalVisible) {
+      return (
+        <View style={styles.noQuestionContainer}>
+          <Text style={styles.noQuestionText}>오늘은 어떤 이야기를 해볼까요?</Text>
+          <TouchableOpacity style={styles.onDemandButton} onPress={handleOnDemandQuestion} disabled={isFetchingOnDemand}>
+            {isFetchingOnDemand 
+                ? <ActivityIndicator color="#fff" /> 
+                : <Text style={styles.onDemandButtonText}>다른 이야기 할래?</Text>
+            }
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    // 그 외의 경우 (모달이 열려있을 때 등)
+    return null;
+  };
+  // ======================= ▲▲▲ 수정된 부분 ▲▲▲ =======================
+
   return (
     <TimeBasedBackground><SafeAreaView style={styles.safeArea}>
       <View style={styles.header}><View style={styles.headerLeft}><View style={styles.coinContainer}><View style={styles.coinContent}><Image source={icons.seed} style={styles.coinImage} /><Text style={styles.coinText}>210</Text></View></View></View><View style={styles.headerRight}><TouchableOpacity onPress={handleShopPress} style={styles.iconButton}><View style={styles.iconShadow}><Image source={icons.shop} style={styles.headerIcon} /></View></TouchableOpacity><TouchableOpacity onPress={handleHospitalPress} style={styles.iconButton}><View style={styles.iconShadow}><Image source={icons.hospital} style={styles.headerIcon} /></View></TouchableOpacity><TouchableOpacity onPress={handleSettingsPress} style={styles.iconButton}><View style={styles.iconShadow}><Image source={icons.settings} style={styles.headerIcon} /></View></TouchableOpacity></View></View>
@@ -173,43 +188,34 @@ const MainScreen: React.FC = () => {
             {renderCharacterContent()}
             {renderMessageArea()}
         </View>
-
-        {/* ======================= ▼▼▼ 버튼 추가 ▼▼▼ ======================= */}
-        {!currentQuestion && !isLoadingQuestion && (
-            <TouchableOpacity style={styles.onDemandButton} onPress={handleOnDemandQuestion} disabled={isFetchingOnDemand}>
-                {isFetchingOnDemand ? <ActivityIndicator color="#fff" /> : <Text style={styles.onDemandButtonText}>다른 이야기 할래?</Text>}
-            </TouchableOpacity>
-        )}
-        {/* ======================= ▲▲▲ 버튼 추가 ▲▲▲ ======================= */}
-
+        {/* '추가 질문' 버튼이 renderMessageArea 안으로 이동했으므로 이 부분은 삭제합니다. */}
       </View>
       {isModalVisible && currentQuestion && (<View style={StyleSheet.absoluteFillObject} pointerEvents="auto"><Modal animationType="fade" transparent={true} visible={isModalVisible} onRequestClose={handleCancelAnswer}><TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPressOut={() => { if (!isSubmittingAnswer) { Keyboard.dismiss(); handleCancelAnswer(); } }}><TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}><View style={styles.modalContent}><Text style={styles.modalQuestionText}>{currentQuestion.questionText}</Text><TextInput style={styles.modalTextInput} placeholder="네 생각을 편하게 이야기해줘..." placeholderTextColor="#888" multiline numberOfLines={4} value={userAnswer} onChangeText={setUserAnswer} /><View style={styles.modalButtonContainer}><Button title="다음에 할래" onPress={handleCancelAnswer} color="#FF6347" /><View style={{ width: 20 }} /><Button title="마음 속에 담아둘게" onPress={handleSubmitAnswer} disabled={isSubmittingAnswer} /></View></View></TouchableWithoutFeedback></TouchableOpacity></Modal></View>)}
     </SafeAreaView></TimeBasedBackground>
   );
 };
 
-// 기존 스타일에 onDemandButton 스타일 추가
 const styles = StyleSheet.create({
-    onDemandButton: {
-        position: 'absolute',
-        bottom: 80,
-        alignSelf: 'center',
-        backgroundColor: '#1E88E5',
-        paddingVertical: 14,
-        paddingHorizontal: 28,
-        borderRadius: 30,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-    },
-    onDemandButtonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    // (이하 나머지 스타일은 이전과 동일)
-    safeArea: { flex: 1, backgroundColor: 'transparent' }, header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingTop: Platform.OS === 'android' ? 25 : 10, height: 60 }, headerLeft: { flexDirection: 'row' }, headerRight: { flexDirection: 'row', alignItems: 'center' }, coinContainer: { backgroundColor: 'rgba(255, 255, 255, 0.3)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, marginLeft: 15 }, coinContent: { flexDirection: 'row', alignItems: 'center' }, coinImage: { width: 18, height: 18, marginRight: 6 }, coinText: { fontSize: 16, fontWeight: '600', color: '#333' }, iconButton: { padding: 2, marginLeft: 10 }, headerIcon: { width: 35, height: 35, resizeMode: 'contain' }, iconShadow: { backgroundColor: 'rgba(255, 255, 255, 0.3)', borderRadius: 30, padding: 4 }, content: { flex: 1, paddingBottom: 50 }, mainInteractionArea: { flex: 1, alignItems: 'center', justifyContent: 'center' }, characterContainer: { position: 'relative', alignItems: 'center', marginBottom: 10, marginTop: 320 }, characterImage: { width: 120, height: 120, resizeMode: 'contain' }, newMessageIconContainer: { position: 'absolute', top: -5, right: -5, zIndex: 1 }, tempNewMessageIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'red', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'white' }, tempNewMessageIconText: { color: 'white', fontWeight: 'bold', fontSize: 18 }, messagePromptContainer: { backgroundColor: 'rgba(255, 255, 255, 0.9)', paddingVertical: 15, paddingHorizontal: 25, borderRadius: 20, alignItems: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3.84, elevation: 3, marginHorizontal: 30, maxWidth: '90%', alignSelf: 'center' }, messagePromptText: { fontSize: 17, fontWeight: '600', color: '#336699', textAlign: 'center' }, messagePromptHintText: { fontSize: 13, color: '#555', textAlign: 'center', marginTop: 5 }, questionBubble: { backgroundColor: 'rgba(255, 255, 255, 0.9)', paddingVertical: 15, paddingHorizontal: 20, borderRadius: 20, marginHorizontal: 30, minHeight: 60, alignItems: 'center', justifyContent: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2, maxWidth: '90%', alignSelf: 'center' }, questionText: { fontSize: 16, color: '#333333', textAlign: 'center', lineHeight: 22 }, noQuestionContainer: { alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(255, 255, 255, 0.85)', borderRadius: 15, marginHorizontal: 30, maxWidth: '90%', alignSelf: 'center' }, noQuestionText: { fontSize: 17, color: '#527289', textAlign: 'center', marginBottom: 20, lineHeight: 24 }, retryButton: { backgroundColor: '#FFB74D', paddingVertical: 12, paddingHorizontal: 25, borderRadius: 25, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 2 }, retryButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' }, modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.55)' }, modalContent: { width: '90%', maxWidth: 380, backgroundColor: 'white', borderRadius: 20, padding: 25, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.30, shadowRadius: 4.65, elevation: 8 }, modalQuestionText: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 25, textAlign: 'center', lineHeight: 26 }, modalTextInput: { width: '100%', minHeight: 100, maxHeight: 150, padding: 15, backgroundColor: '#F9F9F9', borderColor: '#D0D0D0', borderWidth: 1, borderRadius: 12, textAlignVertical: 'top', fontSize: 16, lineHeight: 22, color: '#333', marginBottom: 30 }, modalButtonContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
+  // 'onDemandButton' 스타일을 retryButton 스타일과 유사하게 수정하고, absolute 포지셔닝 제거
+  onDemandButton: {
+      backgroundColor: '#1E88E5',
+      paddingVertical: 12,
+      paddingHorizontal: 25,
+      borderRadius: 25,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      marginTop: 10, // noQuestionText와의 간격
+  },
+  onDemandButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  // (이하 나머지 스타일은 이전과 동일)
+  safeArea: { flex: 1, backgroundColor: 'transparent' }, header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingTop: Platform.OS === 'android' ? 25 : 10, height: 60 }, headerLeft: { flexDirection: 'row' }, headerRight: { flexDirection: 'row', alignItems: 'center' }, coinContainer: { backgroundColor: 'rgba(255, 255, 255, 0.3)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, marginLeft: 15 }, coinContent: { flexDirection: 'row', alignItems: 'center' }, coinImage: { width: 18, height: 18, marginRight: 6 }, coinText: { fontSize: 16, fontWeight: '600', color: '#333' }, iconButton: { padding: 2, marginLeft: 10 }, headerIcon: { width: 35, height: 35, resizeMode: 'contain' }, iconShadow: { backgroundColor: 'rgba(255, 255, 255, 0.3)', borderRadius: 30, padding: 4 }, content: { flex: 1, paddingBottom: 50 }, mainInteractionArea: { flex: 1, alignItems: 'center', justifyContent: 'center' }, characterContainer: { position: 'relative', alignItems: 'center', marginBottom: 10, marginTop: 320 }, characterImage: { width: 120, height: 120, resizeMode: 'contain' }, newMessageIconContainer: { position: 'absolute', top: -5, right: -5, zIndex: 1 }, tempNewMessageIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'red', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'white' }, tempNewMessageIconText: { color: 'white', fontWeight: 'bold', fontSize: 18 }, messagePromptContainer: { backgroundColor: 'rgba(255, 255, 255, 0.9)', paddingVertical: 15, paddingHorizontal: 25, borderRadius: 20, alignItems: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3.84, elevation: 3, marginHorizontal: 30, maxWidth: '90%', alignSelf: 'center' }, messagePromptText: { fontSize: 17, fontWeight: '600', color: '#336699', textAlign: 'center' }, messagePromptHintText: { fontSize: 13, color: '#555', textAlign: 'center', marginTop: 5 }, questionBubble: { backgroundColor: 'rgba(255, 255, 255, 0.9)', paddingVertical: 15, paddingHorizontal: 20, borderRadius: 20, marginHorizontal: 30, minHeight: 60, alignItems: 'center', justifyContent: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2, maxWidth: '90%', alignSelf: 'center' }, questionText: { fontSize: 16, color: '#333333', textAlign: 'center', lineHeight: 22 },
+  // noQuestionContainer 스타일을 retryButton을 제거하고 onDemandButton을 포함하도록 수정
+  noQuestionContainer: { alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(255, 255, 255, 0.85)', borderRadius: 15, marginHorizontal: 30, maxWidth: '90%', alignSelf: 'center' },
+  noQuestionText: { fontSize: 17, color: '#527289', textAlign: 'center', marginBottom: 15 }, // 버튼과의 간격 조절
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.55)' }, modalContent: { width: '90%', maxWidth: 380, backgroundColor: 'white', borderRadius: 20, padding: 25, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.30, shadowRadius: 4.65, elevation: 8 }, modalQuestionText: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 25, textAlign: 'center', lineHeight: 26 }, modalTextInput: { width: '100%', minHeight: 100, maxHeight: 150, padding: 15, backgroundColor: '#F9F9F9', borderColor: '#D0D0D0', borderWidth: 1, borderRadius: 12, textAlignVertical: 'top', fontSize: 16, lineHeight: 22, color: '#333', marginBottom: 30 }, modalButtonContainer: { flexDirection: 'row', justifyContent: 'space-around', width: '100%' },
 });
+
 export default MainScreen;
