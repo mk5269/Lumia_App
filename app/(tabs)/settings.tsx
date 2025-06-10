@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -70,7 +71,7 @@ const SettingsScreen = () => {
       fetchSettings();
     }
   };
-  
+
   const setupNextNotification = async (currentSettings: UserSettingsData) => {
     if (currentSettings.pushNotificationEnabled && currentSettings.notificationTime) {
       const hasPermission = await registerForPushNotificationsAsync();
@@ -80,44 +81,40 @@ const SettingsScreen = () => {
         nextNotificationDate.setHours(hour);
         nextNotificationDate.setMinutes(minute);
         nextNotificationDate.setSeconds(0);
-        
+
         const now = new Date();
-        
-        // 오늘 마지막으로 질문을 받은 기록이 있는지 확인합니다.
+
         let lastIssuedDate: Date | null = null;
         if (currentSettings.lastIssuedAt) {
-            lastIssuedDate = new Date(currentSettings.lastIssuedAt);
+          lastIssuedDate = new Date(currentSettings.lastIssuedAt);
         }
 
         const isToday = (someDate: Date) => {
-            const today = new Date();
-            return someDate.getDate() === today.getDate() &&
-                   someDate.getMonth() === today.getMonth() &&
-                   someDate.getFullYear() === today.getFullYear();
+          const today = new Date();
+          return someDate.getDate() === today.getDate() &&
+                 someDate.getMonth() === today.getMonth() &&
+                 someDate.getFullYear() === today.getFullYear();
         };
 
-        // 조건 확인:
-        // 1. 오늘 이미 질문을 받았다면, 무조건 다음 날로 예약합니다.
-        // 2. 오늘 질문을 아직 안 받았지만, 설정하려는 시간이 이미 지났다면 다음 날로 예약합니다.
         if ((lastIssuedDate && isToday(lastIssuedDate)) || nextNotificationDate.getTime() < now.getTime()) {
-            nextNotificationDate.setDate(nextNotificationDate.getDate() + 1);
+          nextNotificationDate.setDate(nextNotificationDate.getDate() + 1);
         }
-        
-        await schedulePushNotification(nextNotificationDate, true);
 
+        await schedulePushNotification(nextNotificationDate, true);
       } else {
         Alert.alert("알림 권한 필요", "알림을 받으려면 앱 설정에서 알림 권한을 허용해주세요.");
         handleSaveSettings({ ...currentSettings, pushNotificationEnabled: false });
       }
     } else {
-        await Notifications.cancelAllScheduledNotificationsAsync();
-        console.log('All notifications cancelled.');
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      console.log('All notifications cancelled.');
     }
   };
 
   const handleAlarmToggle = (value: boolean) => {
     handleSaveSettings({ pushNotificationEnabled: value });
   };
+
   const onTimeChange = (event: any, selectedDate?: Date) => {
     setShowPicker(false);
     if (event.type === 'set' && selectedDate) {
@@ -127,6 +124,7 @@ const SettingsScreen = () => {
       handleSaveSettings({ notificationTime: newTime });
     }
   };
+
   const getDisplayTime = () => {
     if (!settings || !settings.notificationTime) return new Date();
     const [hour, minute] = settings.notificationTime.split(':').map(Number);
@@ -146,13 +144,62 @@ const SettingsScreen = () => {
       <ScrollView contentContainerStyle={{ paddingBottom: 60, flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View style={styles.section}><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>배경 음악</Text><Switch value={isMusicOn} onValueChange={setIsMusicOn} /></View><View style={styles.musicButtons}><TouchableOpacity onPress={() => setSelectedMusic(1)}><Image source={require('../../assets/images/music1.png')} style={[styles.musicImage, selectedMusic === 1 && styles.selected]} /><Text style={styles.musicLabel}>Track I</Text></TouchableOpacity><TouchableOpacity onPress={() => setSelectedMusic(2)}><Image source={require('../../assets/images/music2.png')} style={[styles.musicImage, selectedMusic === 2 && styles.selected]} /><Text style={styles.musicLabel}>Track II</Text></TouchableOpacity></View></View>
         <View style={styles.section}><Text style={styles.sectionTitle}>루미아의 인사</Text><View style={styles.sectionHeader}><Text style={styles.subText}>푸시 알림 받기</Text><Switch value={settings.pushNotificationEnabled} onValueChange={handleAlarmToggle} /></View><Text style={styles.subText}>지정한 시간에 새로운 메시지 도착 알림을 보내 드려요.</Text><TouchableOpacity style={[styles.timePicker, !settings.pushNotificationEnabled && styles.disabledPicker]} onPress={() => settings.pushNotificationEnabled && setShowPicker(true)} disabled={!settings.pushNotificationEnabled}><Text style={!settings.pushNotificationEnabled && styles.disabledText}>{settings.notificationTime ? new Date(`1970-01-01T${settings.notificationTime}`).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true }) : '시간 설정'}</Text></TouchableOpacity>
-        {Platform.OS === 'android' && showPicker && <DateTimePicker value={getDisplayTime()} mode="time" display="default" onChange={onTimeChange} />}
-        {Platform.OS === 'ios' && showPicker && <DateTimePicker value={getDisplayTime()} mode="time" display="spinner" onChange={onTimeChange} />}
+
+        {Platform.OS === 'android' && showPicker && <DateTimePicker value={getDisplayTime()}  mode="time" display="default" onChange={onTimeChange} />}
+
+        {Platform.OS === 'ios' && showPicker && (
+          <Modal transparent animationType="slide">
+            <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowPicker(false)}>
+              <View style={styles.modalContent}>
+                <TouchableOpacity style={styles.closeButton} onPress={() => setShowPicker(false)}>
+                  <Text style={styles.closeText}>닫기</Text>
+                </TouchableOpacity>
+                <DateTimePicker value={getDisplayTime()} mode="time" display="spinner" onChange={onTimeChange} style={{ backgroundColor: 'white' }} themeVariant="light" />
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        )}
         </View>
         <View style={styles.section}><Text style={styles.sectionTitle}>환경 설정</Text><View style={styles.sectionHeader}><Text style={styles.extraText}>앱 버전</Text><Text style={styles.extraText}>v{Constants.manifest?.version ?? '1.0.0'}</Text></View></View>
       </ScrollView>
     </SafeAreaView>
-   );
+  );
 };
-const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#F9F9FB' }, loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' }, titleRowSticky: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: '#F9F9FB', zIndex: 10 }, icon: { width: 40, height: 40, marginRight: 10 }, title: { fontSize: 26, fontWeight: '600', color: '#222' }, section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginVertical: 8, marginHorizontal: 15, shadowColor: '#000', shadowOpacity: 0.04, shadowOffset: { width: 0, height: 2 }, shadowRadius: 6, elevation: 2 }, sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }, sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 12 }, subText: { fontSize: 16, color: '#555', fontWeight: '500' }, extraText: { fontSize: 16, fontWeight: '600', color: '#444' }, musicButtons: { flexDirection: 'row', justifyContent: 'center', gap: 40, marginTop: 10 }, musicImage: { width: 100, height: 100, borderRadius: 14, marginBottom: 8 }, musicLabel: { textAlign: 'center', fontSize: 14, fontWeight: '500', color: '#444' }, selected: { borderWidth: 3, borderColor: '#6C9EFF', borderRadius: 14 }, timePicker: { marginTop: 10, padding: 14, backgroundColor: '#F1F3F5', borderRadius: 10, alignItems: 'center' }, disabledPicker: { backgroundColor: '#E9ECEF' }, disabledText: { color: '#ADB5BD' }});
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F9F9FB' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  titleRowSticky: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 10, backgroundColor: '#F9F9FB', zIndex: 10 },
+  icon: { width: 40, height: 40, marginRight: 10 },
+  title: { fontSize: 26, fontWeight: '600', color: '#222' },
+    section: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 15,
+    marginHorizontal: 15,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 2,
+  },
+sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 12 },
+  subText: { fontSize: 16, color: '#555', fontWeight: '500' },
+  extraText: { fontSize: 16, fontWeight: '600', color: '#444' },
+  musicButtons: { flexDirection: 'row', justifyContent: 'center', gap: 40, marginTop: 10 },
+  musicImage: { width: 100, height: 100, borderRadius: 14, marginBottom: 8 },
+  musicLabel: { textAlign: 'center', fontSize: 14, fontWeight: '500', color: '#444' },
+  selected: { borderWidth: 3, borderColor: '#6C9EFF', borderRadius: 14 },
+  timePicker: { marginTop: 10, padding: 14, backgroundColor: '#F1F3F5', borderRadius: 10, alignItems: 'center' },
+  disabledPicker: { backgroundColor: '#E9ECEF' },
+  disabledText: { color: '#ADB5BD' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalContent: { backgroundColor: '#fff', padding: 20, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  closeButton: { alignSelf: 'flex-end', padding: 10 },
+  closeText: { fontSize: 16, fontWeight: '600', color: '#007AFF' },
+});
+
 export default SettingsScreen;
