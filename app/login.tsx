@@ -151,7 +151,7 @@ const handleFindIdByEmail = async () => {
           </TouchableOpacity>
 
           <Image
-            source={require('../assets/images/main_character.gif')}
+            source={require('../assets/images/stand_Normal.gif')}
             style={styles.characterImage}
           />
 
